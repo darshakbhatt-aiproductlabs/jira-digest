@@ -278,83 +278,55 @@
 <div class="demo-banner">
   <span class="ico">💡</span>
   <span>
-    <strong>This is a sample digest</strong> with fabricated data. Every section is configurable —
-    <strong>hover the purple dots</strong> next to each title for what's customizable.
-    <strong>Click any section title, ticket key, or count</strong> to see the live Jira search behind it.
+    <strong>This is a sample digest</strong> with fabricated data — but every section below uses a section type the production code actually supports
+    (<code style="background:#F4F5F7;padding:1px 5px;border-radius:3px">kpi</code>,
+    <code style="background:#F4F5F7;padding:1px 5px;border-radius:3px">list</code>,
+    <code style="background:#F4F5F7;padding:1px 5px;border-radius:3px">status_breakdown</code>,
+    <code style="background:#F4F5F7;padding:1px 5px;border-radius:3px">stuck</code>,
+    <code style="background:#F4F5F7;padding:1px 5px;border-radius:3px">recent</code>,
+    <code style="background:#F4F5F7;padding:1px 5px;border-radius:3px">group_by</code>).
+    <strong>Hover the purple dots</strong> for what's configurable · <strong>click any title, ticket, status, or counter</strong> to see the live Jira query behind it.
   </span>
 </div>
 
-<!-- ╭───────────── Worth engaging today (purple) ─────────────╮ -->
-<div class="card purple">
+<!-- ╭───────────── Key metrics (kpi section type) ─────────────╮ -->
+<div class="card blue">
   <div class="card-head">
     <h2 class="card-title">
-      <a href="#" class="demo-link" data-jql='project = CUS AND statusCategory != Done ORDER BY "engagement_score" DESC'>
-        <span class="emoji">🎯</span><span>Worth engaging today</span>
+      <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done'>
+        <span class="emoji">📊</span><span>Key metrics</span>
         <span class="arr">view in Jira ↗</span>
       </a>
-      <span class="dot-pulse" tabindex="0" data-tooltip="Composite scoring section — combines criticality (keywords), customer value (deal size/tier), and roadmap-fit. Configure the weights, the JQL, and how many rows show. Each row also has a 'why this one' explainer column you can customize."></span>
+      <span class="dot-pulse" tabindex="0" data-tooltip="KPI section — each counter runs its own JQL count. Add/remove as many as you want in config. Click any number to open that filtered Jira search."></span>
     </h2>
-    <span class="card-note">top 5 of 299 active</span>
+    <span class="card-note">section type: kpi</span>
   </div>
-  <p class="card-desc">
-    Score = <b>roadmap_fit × criticality × customer_value</b>.
-    <span class="legend-dot" style="background:#DE350B"></span><span style="color:#DE350B">≥ 0.40 act now</span>
-    <span class="legend-dot" style="background:#FF8B00"></span><span style="color:#FF8B00">0.20–0.40 consider</span>
-    <span class="legend-dot" style="background:#0052CC"></span><span style="color:#0052CC">&lt; 0.20 weak match</span>
-  </p>
-  <table>
-    <thead><tr>
-      <th class="num">Score</th><th>Ticket</th><th>Summary</th>
-      <th>Status</th><th>Age</th><th class="num">Amount</th><th>Why this one</th>
-    </tr></thead>
-    <tbody>
-      <tr>
-        <td class="score score-mid">0.36</td>
-        <td><a class="tkt demo-link" data-jql="key = PROJ-1024">PROJ-1024</a></td>
-        <td>SSO login intermittently fails for SAML users under load</td>
-        <td><a href="#" class="demo-link" data-jql='project = PROJ AND status = "In Progress"' style="color:#FF8B00;font-weight:600">In Progress</a></td>
-        <td><span class="badge badge-amber">19d</span></td>
-        <td class="money">$60k</td>
-        <td class="tight">Roadmap: <b>identity stack</b> · Critical: <i>fails, intermittent</i> · <b>Northstar</b></td>
-      </tr>
-      <tr>
-        <td class="score score-mid">0.24</td>
-        <td><a class="tkt demo-link" data-jql="key = PROJ-1018">PROJ-1018</a></td>
-        <td>Billing webhook silently drops retries after 3 failures</td>
-        <td><a href="#" class="demo-link" data-jql='project = PROJ AND status = "Next Sprint"' style="color:#FF8B00;font-weight:600">Next Sprint</a></td>
-        <td><span class="badge badge-red">225d</span></td>
-        <td class="money">$5k</td>
-        <td class="tight">Roadmap: <b>billing reliability</b> · Critical: <i>crash, retries</i> · small</td>
-      </tr>
-      <tr>
-        <td class="score score-low">0.18</td>
-        <td><a class="tkt demo-link" data-jql="key = PROJ-1265">PROJ-1265</a></td>
-        <td>Define re-run count on failure under Test Suite settings</td>
-        <td><a href="#" class="demo-link" data-jql='project = PROJ AND status = "Next Sprint"' style="color:#0052CC;font-weight:600">Next Sprint</a></td>
-        <td><span class="badge badge-red">34d</span></td>
-        <td class="money"><span style="color:#6B778C">—</span></td>
-        <td class="tight">Roadmap: <b>test reliability</b> · Critical: <i>failure</i> · <b>Pacific Foods</b></td>
-      </tr>
-      <tr>
-        <td class="score score-low">0.15</td>
-        <td><a class="tkt demo-link" data-jql="key = PROJ-0832">PROJ-0832</a></td>
-        <td>Auto-Heal picks wrong element (80% confidence) instead of Call Log</td>
-        <td><a href="#" class="demo-link" data-jql='project = PROJ AND status = "In Progress"' style="color:#FF8B00;font-weight:600">In Progress</a></td>
-        <td><span class="badge badge-red">94d</span></td>
-        <td class="money">$120k</td>
-        <td class="tight">Roadmap: <b>recorder</b> · Critical: <i>fails, wrong</i> · <b>high-paying</b></td>
-      </tr>
-      <tr>
-        <td class="score score-low">0.12</td>
-        <td><a class="tkt demo-link" data-jql="key = PROJ-1102">PROJ-1102</a></td>
-        <td>AI-Based failure categorisation for test execution results</td>
-        <td><a href="#" class="demo-link" data-jql='project = PROJ AND status = "Reviewed"' style="color:#0052CC;font-weight:600">Reviewed</a></td>
-        <td><span class="badge badge-amber">12d</span></td>
-        <td class="money">$45k</td>
-        <td class="tight">Roadmap: <b>analytics</b> · Critical: <i>failure</i> · <b>Atlas</b></td>
-      </tr>
-    </tbody>
-  </table>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 0">
+    <div style="background:#FFFFFF;border:1px solid #DFE1E6;border-radius:8px;padding:14px 16px;text-align:center;flex:1 1 130px;min-width:120px">
+      <div style="font-size:11px;color:#5E6C84;text-transform:uppercase;letter-spacing:0.04em">Open</div>
+      <div style="font-size:26px;font-weight:800;color:#0052CC;line-height:1.1;margin-top:5px">
+        <a class="demo-link" data-jql='project = PROJ AND statusCategory != Done' style="color:#0052CC;text-decoration:none">127</a>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #DFE1E6;border-radius:8px;padding:14px 16px;text-align:center;flex:1 1 130px;min-width:120px">
+      <div style="font-size:11px;color:#5E6C84;text-transform:uppercase;letter-spacing:0.04em">New (7d)</div>
+      <div style="font-size:26px;font-weight:800;color:#0052CC;line-height:1.1;margin-top:5px">
+        <a class="demo-link" data-jql='project = PROJ AND created >= -7d' style="color:#0052CC;text-decoration:none">12</a>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #DFE1E6;border-radius:8px;padding:14px 16px;text-align:center;flex:1 1 130px;min-width:120px">
+      <div style="font-size:11px;color:#5E6C84;text-transform:uppercase;letter-spacing:0.04em">Closed (7d)</div>
+      <div style="font-size:26px;font-weight:800;color:#0052CC;line-height:1.1;margin-top:5px">
+        <a class="demo-link" data-jql='project = PROJ AND resolved >= -7d' style="color:#0052CC;text-decoration:none">18</a>
+      </div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #DFE1E6;border-radius:8px;padding:14px 16px;text-align:center;flex:1 1 130px;min-width:120px">
+      <div style="font-size:11px;color:#5E6C84;text-transform:uppercase;letter-spacing:0.04em">Critical open</div>
+      <div style="font-size:26px;font-weight:800;color:#DE350B;line-height:1.1;margin-top:5px">
+        <a class="demo-link" data-jql='project = PROJ AND priority IN (Highest, High) AND statusCategory != Done' style="color:#DE350B;text-decoration:none">8</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ╭───────────── Stuck high-value (amber) ─────────────╮ -->
@@ -436,28 +408,59 @@
   </table>
 </div>
 
-<!-- ╭───────────── Top customer accounts (green) ─────────────╮ -->
+<!-- ╭───────────── Top customer accounts (group_by section type) ─────────────╮ -->
 <div class="card green">
   <div class="card-head">
     <h2 class="card-title">
-      <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" IS NOT EMPTY ORDER BY "deal_amount" DESC'>
-        <span class="emoji">💰</span><span>Top customer accounts</span>
+      <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" IS NOT EMPTY'>
+        <span class="emoji">👥</span><span>Top customer accounts</span>
         <span class="arr">view in Jira ↗</span>
       </a>
-      <span class="dot-pulse" tabindex="0" data-tooltip="Group-by on any field — customer for impact ranking, assignee for bandwidth, component for hotspots, severity for risk. Add a money column from any custom field via alias."></span>
+      <span class="dot-pulse" tabindex="0" data-tooltip="group_by section — buckets tickets by any field (customer, assignee, component, severity). Each group shows name + open count + sample ticket keys. Want extra columns (deal value, critical count)? See the 'extend by asking your LLM' section below."></span>
     </h2>
-    <span class="card-note">top 5 of 14</span>
+    <span class="card-note">showing 5 of 14 · section type: group_by</span>
   </div>
-  <table>
-    <thead><tr><th>Customer</th><th class="num">Open</th><th class="num">Critical</th><th class="num">Deal value</th><th>Notable tickets</th></tr></thead>
-    <tbody>
-      <tr><td><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Northstar Logistics"' style="font-weight:600;color:#172B4D;text-decoration:none;border-bottom:1px dotted #97A0AF">Northstar Logistics</a></td><td class="num">18</td><td class="num"><a class="demo-link" data-jql='project = PROJ AND "customer_account" = "Northstar Logistics" AND priority IN (Highest, High) AND statusCategory != Done' style="text-decoration:none"><span class="badge badge-red">3</span></a></td><td class="money">$240k</td><td class="tight"><a class="tkt demo-link" data-jql="key = PROJ-1024">PROJ-1024</a> <a class="tkt demo-link" data-jql="key = PROJ-0982">PROJ-0982</a></td></tr>
-      <tr><td><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Atlas Manufacturing"' style="font-weight:600;color:#172B4D;text-decoration:none;border-bottom:1px dotted #97A0AF">Atlas Manufacturing</a></td><td class="num">9</td><td class="num"><a class="demo-link" data-jql='project = PROJ AND "customer_account" = "Atlas Manufacturing" AND priority IN (Highest, High) AND statusCategory != Done' style="text-decoration:none"><span class="badge badge-amber">2</span></a></td><td class="money">$180k</td><td class="tight"><a class="tkt demo-link" data-jql="key = PROJ-0964">PROJ-0964</a> <a class="tkt demo-link" data-jql="key = PROJ-0844">PROJ-0844</a></td></tr>
-      <tr><td><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Continental Energy"' style="font-weight:600;color:#172B4D;text-decoration:none;border-bottom:1px dotted #97A0AF">Continental Energy</a></td><td class="num">7</td><td class="num"><a class="demo-link" data-jql='project = PROJ AND "customer_account" = "Continental Energy" AND priority IN (Highest, High) AND statusCategory != Done' style="text-decoration:none"><span class="badge badge-amber">1</span></a></td><td class="money">$120k</td><td class="tight"><a class="tkt demo-link" data-jql="key = PROJ-0807">PROJ-0807</a></td></tr>
-      <tr><td><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Pacific Foods"' style="font-weight:600;color:#172B4D;text-decoration:none;border-bottom:1px dotted #97A0AF">Pacific Foods</a></td><td class="num">14</td><td class="num"><span class="badge badge-green">0</span></td><td class="money">$95k</td><td class="tight"><a class="tkt demo-link" data-jql="key = PROJ-1101">PROJ-1101</a> <a class="tkt demo-link" data-jql="key = PROJ-0901">PROJ-0901</a></td></tr>
-      <tr><td><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Meridian Health"' style="font-weight:600;color:#172B4D;text-decoration:none;border-bottom:1px dotted #97A0AF">Meridian Health</a></td><td class="num">11</td><td class="num"><a class="demo-link" data-jql='project = PROJ AND "customer_account" = "Meridian Health" AND priority IN (Highest, High) AND statusCategory != Done' style="text-decoration:none"><span class="badge badge-amber">1</span></a></td><td class="money">$72k</td><td class="tight"><a class="tkt demo-link" data-jql="key = PROJ-0488">PROJ-0488</a></td></tr>
-    </tbody>
-  </table>
+  <div>
+    <div style="padding:10px 0;border-bottom:1px solid #F4F5F7">
+      <a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Northstar Logistics"' style="font-weight:600;color:#172B4D;font-size:14px;text-decoration:none;border-bottom:1px dotted #97A0AF">Northstar Logistics</a>
+      <span style="color:#5E6C84;margin-left:8px;font-size:13px">— 18 open</span>
+      <ul style="margin:6px 0 0 0;padding-left:20px;color:#5E6C84;font-size:12.5px">
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-1024">PROJ-1024</a> <span style="color:#172B4D">— SSO login intermittently fails for SAML users</span></li>
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-0982">PROJ-0982</a> <span style="color:#172B4D">— Onboarding email duplicated when invite resent</span></li>
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-0901">PROJ-0901</a> <span style="color:#172B4D">— Bulk import error messaging unclear</span></li>
+      </ul>
+    </div>
+    <div style="padding:10px 0;border-bottom:1px solid #F4F5F7">
+      <a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Pacific Foods"' style="font-weight:600;color:#172B4D;font-size:14px;text-decoration:none;border-bottom:1px dotted #97A0AF">Pacific Foods</a>
+      <span style="color:#5E6C84;margin-left:8px;font-size:13px">— 14 open</span>
+      <ul style="margin:6px 0 0 0;padding-left:20px;color:#5E6C84;font-size:12.5px">
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-1101">PROJ-1101</a> <span style="color:#172B4D">— Filter persistence broken across page reloads</span></li>
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-0844">PROJ-0844</a> <span style="color:#172B4D">— Webhooks dropped after retry threshold</span></li>
+      </ul>
+    </div>
+    <div style="padding:10px 0;border-bottom:1px solid #F4F5F7">
+      <a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Meridian Health"' style="font-weight:600;color:#172B4D;font-size:14px;text-decoration:none;border-bottom:1px dotted #97A0AF">Meridian Health</a>
+      <span style="color:#5E6C84;margin-left:8px;font-size:13px">— 11 open</span>
+      <ul style="margin:6px 0 0 0;padding-left:20px;color:#5E6C84;font-size:12.5px">
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-1100">PROJ-1100</a> <span style="color:#172B4D">— Email notifications delayed by ~15 min</span></li>
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-0931">PROJ-0931</a> <span style="color:#172B4D">— CSV export drops Unicode chars</span></li>
+      </ul>
+    </div>
+    <div style="padding:10px 0;border-bottom:1px solid #F4F5F7">
+      <a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Atlas Manufacturing"' style="font-weight:600;color:#172B4D;font-size:14px;text-decoration:none;border-bottom:1px dotted #97A0AF">Atlas Manufacturing</a>
+      <span style="color:#5E6C84;margin-left:8px;font-size:13px">— 9 open</span>
+      <ul style="margin:6px 0 0 0;padding-left:20px;color:#5E6C84;font-size:12.5px">
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-0964">PROJ-0964</a> <span style="color:#172B4D">— Dashboard widget timeout on large projects</span></li>
+      </ul>
+    </div>
+    <div style="padding:10px 0">
+      <a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Continental Energy"' style="font-weight:600;color:#172B4D;font-size:14px;text-decoration:none;border-bottom:1px dotted #97A0AF">Continental Energy</a>
+      <span style="color:#5E6C84;margin-left:8px;font-size:13px">— 7 open</span>
+      <ul style="margin:6px 0 0 0;padding-left:20px;color:#5E6C84;font-size:12.5px">
+        <li style="margin:3px 0"><a class="tkt demo-link" data-jql="key = PROJ-0807">PROJ-0807</a> <span style="color:#172B4D">— Audit log truncation on enterprise plans</span></li>
+      </ul>
+    </div>
+  </div>
 </div>
 
 <!-- ╭───────────── Pipeline snapshot (blue) ─────────────╮ -->
@@ -504,26 +507,6 @@
   </div>
 </div>
 
-<!-- ╭───────────── Customer Pressure Index (purple) ─────────────╮ -->
-<div class="card purple">
-  <div class="card-head">
-    <h2 class="card-title">
-      <a href="#" class="demo-link" data-jql='project = PROJ AND "customer_account" IS NOT EMPTY'>
-        <span class="emoji">🌟</span><span>Customer Pressure Index</span>
-        <span class="arr">view in Jira ↗</span>
-      </a>
-      <span class="dot-pulse" tabindex="0" data-tooltip="Bucketed pressure scoring. Customers grouped by combined load (open count × deal value × age). Configure bucket thresholds and weights in config/digest.yml."></span>
-    </h2>
-    <span class="card-note">14 accounts bucketed</span>
-  </div>
-  <div class="stat-grid">
-    <div class="stat-card red"><div class="stat-num">3</div><div class="stat-lbl">High pressure</div></div>
-    <div class="stat-card amber"><div class="stat-num">5</div><div class="stat-lbl">Watch</div></div>
-    <div class="stat-card"><div class="stat-num">4</div><div class="stat-lbl">Healthy</div></div>
-    <div class="stat-card green"><div class="stat-num">2</div><div class="stat-lbl">New voices</div></div>
-  </div>
-</div>
-
 <!-- ╭───────────── Created in last 24h (blue) ─────────────╮ -->
 <div class="card blue">
   <div class="card-head">
@@ -546,23 +529,34 @@
   </table>
 </div>
 
-<!-- ╭───────────── Reporter mix (blue) ─────────────╮ -->
-<div class="card blue">
+<!-- ╭───────────── Extend with LLM prompts (a real card matching the others) ─────────────╮ -->
+<div class="card purple">
   <div class="card-head">
     <h2 class="card-title">
-      <a href="#" class="demo-link" data-jql='project = PROJ AND created >= -30d'>
-        <span class="emoji">💬</span><span>Reporter mix (last 30d)</span>
-        <span class="arr">view in Jira ↗</span>
-      </a>
-      <span class="dot-pulse" tabindex="0" data-tooltip="Aggregate KPI section. Define any counters you want — each runs its own JQL count. Use this for split metrics (internal vs external, paying vs free, by region, etc.)."></span>
+      <span class="emoji">✨</span><span>Want sections beyond the 6 built-ins?</span>
     </h2>
-    <span class="card-note">40 filed by 21 reporters</span>
+    <span class="card-note">extend by chatting with your LLM</span>
   </div>
-  <div class="stat-grid">
-    <div class="stat-card"><div class="stat-num">28</div><div class="stat-lbl">Internal (CSM/PM)</div></div>
-    <div class="stat-card green"><div class="stat-num">12</div><div class="stat-lbl">External (customer)</div></div>
-    <div class="stat-card purple"><div class="stat-num">7</div><div class="stat-lbl">New voices (30d)</div></div>
-    <div class="stat-card amber"><div class="stat-num">62%</div><div class="stat-lbl">Repeat reporters</div></div>
+  <p class="card-desc" style="margin-bottom:14px">
+    The previews above show what the current code produces out of the box. For richer sections — composite scoring, customer pressure buckets, component health matrices, money columns — paste one of these short prompts into Claude Code / Codex / Cursor in your forked repo and the assistant extends the renderer for you:
+  </p>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="background:#F4F5F7;border:1px solid #DFE1E6;border-radius:6px;padding:10px 12px;font-size:12.5px;color:#172B4D;line-height:1.55">
+      <b style="color:#5b21b6">🎯 Composite "worth engaging today" scoring</b><br>
+      <i>"Add a new section type called <code>weighted_score</code> that ranks tickets by criticality × customer value × roadmap fit. Show top 10 sorted by score with a 'why this one' explainer column."</i>
+    </div>
+    <div style="background:#F4F5F7;border:1px solid #DFE1E6;border-radius:6px;padding:10px 12px;font-size:12.5px;color:#172B4D;line-height:1.55">
+      <b style="color:#5b21b6">💰 Deal-value column in group_by</b><br>
+      <i>"In my group_by section, add a 'deal_amount' custom-field column right-aligned with money formatting (e.g. $60k). Sort groups by total deal value descending."</i>
+    </div>
+    <div style="background:#F4F5F7;border:1px solid #DFE1E6;border-radius:6px;padding:10px 12px;font-size:12.5px;color:#172B4D;line-height:1.55">
+      <b style="color:#5b21b6">🌟 Customer pressure index (bucketed stat cards)</b><br>
+      <i>"Add a section type called <code>buckets</code> that classifies customers into High pressure / Watch / Healthy / New voices and renders as 4 colored stat cards."</i>
+    </div>
+    <div style="background:#F4F5F7;border:1px solid #DFE1E6;border-radius:6px;padding:10px 12px;font-size:12.5px;color:#172B4D;line-height:1.55">
+      <b style="color:#5b21b6">🧩 Component health matrix</b><br>
+      <i>"Add a section type called <code>matrix</code> that cross-tabs components (rows) against statuses (columns), with cell counts and a 'signal' dot (green/amber/red) based on roadmap-alignment percentage."</i>
+    </div>
   </div>
 </div>
 

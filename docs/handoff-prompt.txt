@@ -1,0 +1,241 @@
+You are setting up the jira-digest tool in this repository for the user. Your job is to interview them, gather configuration, and produce a working digest — end to end.
+
+==============================================================================
+STEP 0 — Set the working mode
+==============================================================================
+Ask the user FIRST, before anything else:
+
+"Setup mode — pick one:
+  A) Hands-on — I'll set up tokens/secrets myself; you guide me and edit config files.
+  B) Full auto — I'll grant you the credentials; you handle Jira, Git, secrets, and delivery setup end-to-end.
+
+Which one (A or B)?"
+
+If B: warn them that they'll be pasting tokens. Confirm they understand the credentials are shared with this LLM session only and they should rotate them after if concerned. Then continue.
+
+==============================================================================
+STEP 1 — Persona & goal
+==============================================================================
+Ask:
+- "What's your role? (PM / EM / Support lead / Exec / Other)"
+- "Which board or project do you want to digest? (Paste a Jira board URL or project key.)"
+- "Who is this for? Yourself, your team, leadership, or a customer-facing list?"
+
+The persona shapes section recommendations later. Note the answers.
+
+==============================================================================
+STEP 2 — Git connection
+==============================================================================
+Verify git access to the repo:
+- Run `git status` and `git remote -v`. If no remote, ask for the repo URL.
+- Confirm the user has a Personal Access Token with scopes: `repo`, `workflow`, `actions:write` (the last is needed to add secrets via API in mode B).
+- If hands-on, just tell them which scopes they'll need.
+- If full auto, ask them to paste the PAT, then verify with: `curl -s -H "Authorization: token <PAT>" https://api.github.com/user`. Confirm the username matches the repo owner.
+
+==============================================================================
+STEP 3 — Jira connection
+==============================================================================
+Check if a Jira MCP server or connector is available in this session (look for tools whose names contain "jira" or "atlassian"). If yes, prefer that for discovery. Otherwise:
+
+Ask for:
+- Jira base URL (e.g. https://your-domain.atlassian.net)
+- Jira email (Atlassian account)
+- Jira API token (get from https://id.atlassian.com/manage-profile/security/api-tokens)
+
+Verify with a curl call: `curl -u "$EMAIL:$TOKEN" "$BASE/rest/api/3/myself"`. If it returns 200, you're connected. If 401/403, walk the user through fixing it.
+
+==============================================================================
+STEP 4 — Project, board, and key fields
+==============================================================================
+Once connected, discover what the user has:
+1. Confirm the project key. Run `GET /rest/api/3/project/$KEY` to verify.
+2. List issue types in that project: `GET /rest/api/3/project/$KEY/statuses` — show them.
+3. Ask which issue types they care about (or "all").
+4. List active statuses: from the same response, extract status names — present them grouped by category. Confirm which are "active" (not Done) for the config.
+5. Custom fields discovery: `GET /rest/api/3/field`. From the response, identify any custom fields the user references in conversation (e.g. "we have a 'customer account' field"). Build the `fields.aliases` map.
+
+For each custom field they want to use, ask its human-readable alias (e.g. `customer_account`, `severity`, `deal_amount`). Save the alias → customfield_XXXXX mapping.
+
+==============================================================================
+STEP 5 — Digest content (section selection)
+==============================================================================
+Tell the user: "Here are the section types I can compose into your digest. Pick any combination — most teams use 4 to 8."
+
+Present this menu. For each, propose a concrete JQL based on what you learned in step 4. Adapt names to the user's project/fields — do not use any placeholder values from this prompt.
+
+  1) KPI row — open count, new in 7d, closed in 7d (or whatever the user wants)
+  2) Open critical / high priority — list, sorted by age in current status
+  3) Status breakdown — count per active status
+  4) Stuck items — no status change in N days (ask N, default 30)
+  5) New since yesterday — list created in last 24h
+  6) Group by a field — count + sample issues grouped by customer, assignee, component, severity, etc.
+  7) By priority bucket — group_by priority, samples
+  8) Awaiting triage — no assignee or no priority set
+  9) Recently resolved — closed in last 7 days (celebration section, optional)
+
+For each section the user picks:
+  - Confirm the JQL by running it once via the API and reporting the result count.
+  - If the count is 0 or wildly off, iterate before saving.
+  - Decide which columns to show.
+  - Ask for sort + limit.
+
+==============================================================================
+STEP 6 — Delivery channels
+==============================================================================
+Ask: "Which channels should receive the digest?" — Gmail, SMTP, Slack, Teams. Multi-select OK.
+
+For each chosen channel, verify connectivity BEFORE moving on:
+
+GMAIL
+  - Check for a Gmail MCP or Google connector. If available, ask user if they want to use that account (good for previewing drafts) or set up the standalone OAuth client below.
+  - Standalone path: walk them through the steps in README §Step 4-A. If full-auto mode, the user must still run `scripts/get_gmail_token.py` locally — you can't run a browser-based OAuth flow for them. Make this clear.
+  - Test by refreshing the token via the OAuth endpoint and listing drafts to confirm scope.
+
+SMTP
+  - Ask for host, port, username, password, sender. Try a `smtplib.SMTP(...).noop()` from a quick Python snippet via the shell to confirm.
+
+SLACK
+  - Check for a Slack MCP/connector. If available, use it to verify channel access and the bot is invited.
+  - Otherwise: ask for SLACK_BOT_TOKEN. Verify with `curl -H "Authorization: Bearer $TOKEN" https://slack.com/api/auth.test` (expects `ok:true`).
+  - Get the channel ID — confirm by sending a test message via `chat.postMessage` saying "jira-digest setup test ✅".
+
+TEAMS / OUTLOOK
+  - Teams: ask for TEAMS_WEBHOOK_URL. Test with a tiny MessageCard POST containing "jira-digest setup test ✅".
+  - Outlook standalone: if they want Outlook email specifically (not Gmail), point them at SMTP via Office 365 (`smtp.office365.com:587`, OAuth or app password).
+
+==============================================================================
+STEP 6B — Browser-hosted version (optional, only if Slack/Teams selected)
+==============================================================================
+Only ask this if the user picked Slack or Teams as a delivery channel.
+
+Explain: "Slack and Teams cap message size — Slack truncates after ~50 blocks of content (roughly 4–6 sections of detail). If your digest gets big, recipients only see the first chunk. We can fix this by uploading the full HTML to a GitHub gist each morning and linking to it from the Slack/Teams message. Each day = a new gist with its own permanent URL."
+
+CRITICAL — explain the "secret gist" nuance BEFORE they decide:
+  - public:true  → listed on the user's GitHub profile, indexed by search.
+  - public:false → "secret" gist: NOT listed, NOT searchable, but anyone
+                   who holds the URL can read it (no auth wall).
+  - "Secret" is NOT "private." The URL is long and random, so it's not
+    guessable, but if it's shared or leaks (e.g., a Slack DM gets forwarded),
+    anyone with the URL can read the content.
+
+Then ask:
+  "Is your digest content OK to be readable by anyone who gets the URL?
+   (Bearing in mind the URL only ends up in the Slack/Teams channels you
+   pick, and isn't guessable or indexed.)"
+
+If yes → walk them through:
+  1. Create a fine-grained PAT at https://github.com/settings/tokens?type=beta
+     with ONLY the `gist` scope (no repo permissions needed).
+  2. Add it as a GitHub Actions secret named `GIST_PAT`.
+  3. In config/digest.yml set:
+        delivery:
+          gist:
+            enabled: true
+            public: false          # secret = unlisted, recommended default
+            description: "Jira digest — {date}"
+  4. On the next run, the digest script uploads to gist and the Slack/Teams
+     message includes the "📄 View full digest in browser" link.
+
+If no → recommend SKIP. The per-section JQL deep-links already let recipients
+click through to live Jira (which IS authenticated), so the marginal value
+of hosted HTML doesn't justify the data-leak risk.
+
+==============================================================================
+STEP 7 — Secrets
+==============================================================================
+List every secret the user needs based on chosen channels. Examples:
+  REQUIRED:  JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
+  GMAIL:     GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN
+  SMTP:      SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM
+  SLACK:     SLACK_BOT_TOKEN  (or SLACK_WEBHOOK_URL)
+  TEAMS:     TEAMS_WEBHOOK_URL
+  GIST:      GIST_PAT  (only if STEP 6B was opted in)
+
+Hands-on: print the table and have the user add each via repo Settings → Secrets and variables → Actions.
+
+Full-auto: use the GitHub REST API:
+  - Get the repo's public key: GET /repos/{owner}/{repo}/actions/secrets/public-key
+  - For each secret, encrypt the value with libsodium sealed-box using that key, then PUT /repos/{owner}/{repo}/actions/secrets/{NAME} with {"encrypted_value":"...","key_id":"..."}.
+After adding, GET the list of secrets (names only — values are not returned) and confirm every required one is present.
+
+==============================================================================
+STEP 7B — Failure notifications
+==============================================================================
+Ask: "If the daily run ever crashes (expired Jira token, deleted Slack channel, etc.), where should it ping you?"
+
+Options:
+  - none  — workflow run will show as failed in GitHub, but no proactive notification.
+  - slack — DM your Slack user ID (e.g. U01ABCDEF12) or a private channel ID. Uses SLACK_BOT_TOKEN.
+  - email — a single address. Uses the same email transport (gmail/smtp) as the digest.
+
+Recommend slack DM if they're using Slack delivery already (zero extra setup, and a DM survives even if the team channel is broken). Otherwise, an email to their personal/work address.
+
+Set `on_failure.notify_via` and `on_failure.to` in config/digest.yml. If they pick slack, walk them through finding their member ID: Slack profile → ⋯ → Copy member ID.
+
+Confirm by deliberately breaking one thing (e.g. set JIRA_API_TOKEN to a junk value via a workflow_dispatch with an override, then run) and verifying the alert lands. Restore the token after the test.
+
+==============================================================================
+STEP 8 — Schedule (timezone)
+==============================================================================
+Ask the user's timezone (e.g. "Asia/Kolkata", "America/Los_Angeles") and what time they want the digest in their local morning.
+
+Compute the equivalent UTC cron expression. Edit `.github/workflows/digest.yml` and replace the `cron:` line. Suggest weekdays-only unless they say otherwise.
+
+Tell them:
+"GitHub Actions cron can be delayed 1–3 hours under peak load. For tighter delivery, we'll set up cron-job.org later AFTER you've confirmed the digest output is correct (see Step 10)."
+
+==============================================================================
+STEP 9 — Dry run
+==============================================================================
+Run the workflow with dry-run enabled:
+  - GitHub UI: Actions → Jira digest → Run workflow → dry_run=true.
+  - Or via API: `gh workflow run digest.yml -f dry_run=true` (or REST POST equivalent).
+
+When it finishes, download the `digest-dry-run` artifact, open the HTML in a browser, and ask the user:
+"Does this match what you wanted? What's missing, what's noisy?"
+
+Iterate on `config/digest.yml`, push, re-run dry. When the user is happy:
+
+  - Flip `gmail_draft_mode: false` if they want auto-send (optional — drafts are safer initially).
+  - Trigger a real (non-dry) workflow_dispatch run to confirm delivery.
+  - Have them check their inbox / Slack / Teams.
+
+==============================================================================
+STEP 10 — Tightening the schedule (optional)
+==============================================================================
+After the digest content is verified correct, offer:
+"GitHub Actions cron drift can push your morning email to lunch. Want me to set up cron-job.org to trigger this at the exact minute?"
+
+If yes:
+  - Have the user create a GitHub fine-grained PAT with `actions:write` on this repo only.
+  - Direct them to https://cron-job.org → Create cronjob:
+      URL: https://api.github.com/repos/{owner}/{repo}/dispatches
+      Method: POST
+      Headers:
+        Authorization: Bearer <PAT>
+        Accept: application/vnd.github.v3+json
+        Content-Type: application/json
+      Body: {"event_type":"jira-digest"}
+      Schedule: their target time, target timezone, weekdays.
+  - The workflow's `repository_dispatch` trigger picks it up within seconds.
+  - Save a screenshot of the cron-job.org config so they can recreate it.
+
+==============================================================================
+STEP 11 — Hand off
+==============================================================================
+Summarize what you set up:
+  - Project keys, sections, delivery channels, schedule (local + UTC), secrets added.
+  - Link to the latest successful run.
+  - Token expirations to watch (Jira API tokens don't expire by default; Gmail refresh tokens persist as long as scope isn't revoked).
+  - Where to edit things later: config/digest.yml for content, .github/workflows/digest.yml for schedule.
+
+Tell the user:
+"You're set. Future tweaks: edit config/digest.yml and push — the next scheduled run picks up changes automatically. To add a new section type or delivery channel, the source lives in scripts/."
+
+==============================================================================
+GUARDRAILS
+==============================================================================
+- NEVER hard-code any user-specific value (project key, custom field ID, email, channel ID) in scripts/. All such values belong in config/digest.yml or as secrets.
+- NEVER commit secrets, tokens, or API keys to the repo. They go in GitHub Actions secrets only.
+- If a JQL returns 0 results unexpectedly, debug it with the user before saving — silent empty sections are worse than no section.
+- For destructive actions (rotating tokens, deleting secrets), confirm with the user first.

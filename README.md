@@ -751,6 +751,27 @@ Keep the GitHub-side `schedule:` cron in place as a fallback — if cron-job.org
 
 ## Extending
 
+The repo ships with six section types — `kpi`, `list`, `recent`, `status_breakdown`, `stuck`, `group_by`. For anything richer (composite scoring, deal-value columns, multi-axis matrices) just **paste one of these short prompts into Claude Code / Codex / Cursor in your fork** and the assistant extends the renderer for you.
+
+### Sample prompts to extend the renderer
+
+**🎯 Composite "worth engaging today" scoring:**
+> Add a new section type called `weighted_score` that ranks tickets by criticality × customer value × roadmap fit. Show top 10 sorted by score with a 'why this one' explainer column.
+
+**💰 Deal-value column in group_by:**
+> In my group_by section, add a 'deal_amount' custom-field column right-aligned with money formatting (e.g. $60k). Sort groups by total deal value descending.
+
+**🌟 Customer pressure index (bucketed stat cards):**
+> Add a section type called `buckets` that classifies customers into High pressure / Watch / Healthy / New voices and renders as 4 colored stat cards.
+
+**🧩 Component health matrix:**
+> Add a section type called `matrix` that cross-tabs components (rows) against statuses (columns), with cell counts and a 'signal' dot (green/amber/red) based on roadmap-alignment percentage.
+
+**💬 Reporter mix breakdown:**
+> Add a KPI section with 4 metrics: tickets filed by internal users (CSM/PM), external customers, first-time reporters in the last 30 days, and % repeat reporters.
+
+### Extending the architecture
+
 - **New section type:** add a handler in `scripts/sections.py`, register it in the `HANDLERS` dict, and add a rendering branch in `scripts/render_html.py` and `scripts/render_slack.py`.
 - **New delivery channel:** drop a module in `scripts/delivery/` exposing a `send(...)` function, register it in `scripts/delivery/__init__.py`.
 - **Multiple digests:** copy `.github/workflows/digest.yml` to a second file with a different schedule and a different `DIGEST_CONFIG` env var. Each can read its own YAML.
