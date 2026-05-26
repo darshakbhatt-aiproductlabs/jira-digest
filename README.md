@@ -4,6 +4,12 @@
 >
 > Pipeline health, what's critical, what's stuck, who's overloaded, what came in overnight — delivered to your inbox, Slack channel, or Teams channel before standup. No dashboards to babysit. No saved-filter gymnastics. No servers to run.
 
+### 🌐 **[Live demo &amp; landing page →](https://darshakbhatt-aiproductlabs.github.io/jira-digest/)**
+
+See a rendered example digest, feature overview, and the 3-step setup walkthrough.
+
+---
+
 Every PM, EM, and support lead does the same dance each morning: open Jira, click five saved filters, mentally aggregate the numbers, then walk into standup hoping nothing leaked overnight. This tool replaces that dance with one well-formatted message.
 
 One YAML file configures everything. Works with any Atlassian Cloud Jira instance, any project, any custom fields. Runs on GitHub Actions (free tier covers it — ~22 minutes/month of usage). Setup takes ~20 minutes if you let an AI assistant walk you through it.
