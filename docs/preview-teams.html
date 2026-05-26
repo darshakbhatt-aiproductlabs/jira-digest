@@ -255,7 +255,7 @@
             <!-- Title bar -->
             <div class="card-title-bar">
               <span>📬 Daily Jira digest — 2026-05-26</span>
-              <a class="ms-link demo-link" data-jql="full digest html (hosted as gist)">📄 View full digest</a>
+              <a class="ms-link demo-link" data-modal-type="full-html" data-jql="https://gist.github.com/your-username/abc123def456/raw/jira-digest-2026-05-26.html">📄 View full digest</a>
             </div>
 
             <!-- Activity 1: KPI -->
@@ -336,7 +336,7 @@
                 <span>📄</span><span>Open the full digest in browser</span>
               </div>
               <div class="activity-subtitle" style="margin-bottom:10px">Every section, no truncation — useful when this card hits Teams' payload limit.</div>
-              <a class="demo-link" data-jql="full digest html (hosted as gist)" style="display:inline-block;background:#6264A7;color:#fff;padding:7px 14px;border-radius:4px;text-decoration:none;font-weight:600;font-size:13px">Open full digest →</a>
+              <a class="demo-link" data-modal-type="full-html" data-jql="https://gist.github.com/your-username/abc123def456/raw/jira-digest-2026-05-26.html" style="display:inline-block;background:#6264A7;color:#fff;padding:7px 14px;border-radius:4px;text-decoration:none;font-weight:600;font-size:13px">Open full digest →</a>
             </div>
 
             <!-- Activity 6: Handoff CTA -->
@@ -374,14 +374,14 @@
   </main>
 </div>
 
-<!-- Click modal -->
+<!-- Click modal — content swaps based on data-modal-type on the clicked link -->
 <div id="demo-modal" role="dialog" aria-modal="true">
   <div class="modal-card">
     <div class="modal-head">
-      <span style="font-size:22px">🔗</span>
+      <span style="font-size:22px" id="demo-modal-icon">🔗</span>
       <div>
-        <h3>In your real digest, this opens the live Jira search:</h3>
-        <p>Activity titles, ticket keys, KPI numbers, and status names all deep-link to filtered Jira queries.</p>
+        <h3 id="demo-modal-title">In your real digest, this opens the live Jira search:</h3>
+        <p id="demo-modal-sub">Activity titles, ticket keys, KPI numbers, customer names, status pills, and priority pills all deep-link to filtered Jira queries.</p>
       </div>
     </div>
     <pre class="modal-jql" id="demo-modal-jql">project = PROJ ORDER BY created DESC</pre>
@@ -394,15 +394,30 @@
 
 <script>
 (function () {
-  var modal = document.getElementById('demo-modal');
-  var jqlEl = document.getElementById('demo-modal-jql');
+  var modal    = document.getElementById('demo-modal');
+  var icon     = document.getElementById('demo-modal-icon');
+  var title    = document.getElementById('demo-modal-title');
+  var sub      = document.getElementById('demo-modal-sub');
+  var body     = document.getElementById('demo-modal-jql');
+
   document.addEventListener('click', function (e) {
     var link = e.target.closest('.demo-link');
     if (!link) return;
     e.preventDefault();
-    jqlEl.textContent = link.dataset.jql || link.getAttribute('href') || '';
+    var type = link.dataset.modalType || 'jql';
+    if (type === 'full-html') {
+      icon.textContent  = '🌐';
+      title.textContent = "In your real digest, this opens the full HTML version (hosted as a GitHub gist):";
+      sub.innerHTML     = "Slack and Teams cap message size. The digest is also uploaded each morning as an unlisted gist and rendered via htmlpreview.github.io — every section, every row, no truncation. Each day's digest has its own permanent URL.";
+    } else {
+      icon.textContent  = '🔗';
+      title.textContent = "In your real digest, this opens the live Jira search:";
+      sub.innerHTML     = "Activity titles, ticket keys, KPI numbers, customer names, status pills, and priority pills all deep-link to filtered Jira queries.";
+    }
+    body.textContent = link.dataset.jql || link.getAttribute('href') || '';
     modal.classList.add('open');
   });
+
   function close() { modal.classList.remove('open'); }
   document.getElementById('demo-modal-close').addEventListener('click', close);
   modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
