@@ -759,4 +759,12 @@ Keep the GitHub-side `schedule:` cron in place as a fallback — if cron-job.org
 
 ## License
 
-This is a template repo. Use it however you like.
+This is a template repo. Use it however you like — free to fork, modify, and ship to your own team.
+
+---
+
+## Connect
+
+Built by **Darshak Bhatt** — [LinkedIn](https://www.linkedin.com/in/darshak-bhatt/) · [GitHub](https://github.com/darshakbhatt-aiproductlabs)
+
+If this saves your morning, a connect on LinkedIn is appreciated. If it breaks, open an issue on the repo.
