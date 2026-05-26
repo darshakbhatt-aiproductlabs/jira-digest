@@ -1,0 +1,119 @@
+name: Jira digest
+
+on:
+  # Primary schedule. GitHub Actions cron can be delayed 1–3 hours under load.
+  # For tighter delivery, also set up a cron-job.org task that hits the
+  # repository_dispatch endpoint below — see README → "Tightening the schedule".
+  schedule:
+    - cron: '30 2 * * 1-5'    # 02:30 UTC, Mon–Fri. Adjust to your timezone.
+
+  # Manual trigger from the Actions tab — useful for dry runs and first setup.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Render to dry_run_output/ instead of delivering"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+  # External trigger (cron-job.org or any GitHub API caller).
+  # POST to /repos/{owner}/{repo}/dispatches with {"event_type":"jira-digest"}
+  repository_dispatch:
+    types: [jira-digest]
+
+permissions:
+  contents: read
+
+# Prevent overlap if a prior run is still going.
+concurrency:
+  group: jira-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    name: Build & deliver
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install --quiet -r requirements.txt
+
+      - name: Jira preflight (auth + reachability)
+        env:
+          JIRA_BASE_URL:   ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL:      ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN:  ${{ secrets.JIRA_API_TOKEN }}
+          HTTPS_PROXY:     ${{ secrets.HTTPS_PROXY }}
+        run: |
+          set +e
+          if [ -z "$JIRA_BASE_URL" ] || [ -z "$JIRA_EMAIL" ] || [ -z "$JIRA_API_TOKEN" ]; then
+            echo "::error::Missing Jira secrets. Set JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN."
+            exit 1
+          fi
+          BASE="${JIRA_BASE_URL%/}"
+          echo "Runner egress IP: $(curl -s --max-time 10 https://api.ipify.org || echo unknown)"
+          HTTP=$(curl -s -o /tmp/jira_probe.txt -w "%{http_code}" \
+            -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+            --max-time 20 \
+            "${BASE}/rest/api/3/myself")
+          echo "HTTP status: ${HTTP}"
+          if [ "${HTTP}" = "200" ]; then
+            echo "::notice::Jira reachable"
+          elif [ "${HTTP}" = "401" ] || [ "${HTTP}" = "403" ]; then
+            echo "::error::Jira returned ${HTTP} — check credentials or runner IP allowlist."
+            head -c 300 /tmp/jira_probe.txt
+            exit 1
+          else
+            echo "::warning::Unexpected status ${HTTP}; continuing anyway."
+            head -c 300 /tmp/jira_probe.txt
+          fi
+
+      - name: Run digest
+        env:
+          # Jira
+          JIRA_BASE_URL:        ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL:           ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN:       ${{ secrets.JIRA_API_TOKEN }}
+          # Gmail
+          GMAIL_CLIENT_ID:      ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET:  ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN:  ${{ secrets.GMAIL_REFRESH_TOKEN }}
+          # SMTP
+          SMTP_HOST:            ${{ secrets.SMTP_HOST }}
+          SMTP_PORT:            ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME:        ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD:        ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM:            ${{ secrets.SMTP_FROM }}
+          SMTP_USE_TLS:         ${{ secrets.SMTP_USE_TLS }}
+          # Slack
+          SLACK_BOT_TOKEN:      ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL:    ${{ secrets.SLACK_WEBHOOK_URL }}
+          # Teams
+          TEAMS_WEBHOOK_URL:    ${{ secrets.TEAMS_WEBHOOK_URL }}
+          # GitHub gist (only used if delivery.gist.enabled = true in config)
+          GIST_PAT:             ${{ secrets.GIST_PAT }}
+          # Networking
+          HTTPS_PROXY:          ${{ secrets.HTTPS_PROXY }}
+          # Mode (workflow_dispatch input overrides)
+          DRY_RUN:              ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
+          DIGEST_CONFIG:        ${{ vars.DIGEST_CONFIG || 'config/digest.yml' }}
+        run: python scripts/digest.py "$DIGEST_CONFIG"
+
+      - name: Upload dry-run artifacts
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-dry-run
+          path: dry_run_output/
+          if-no-files-found: ignore
