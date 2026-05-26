@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>jira-digest — Microsoft Teams preview</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    background: #F5F5F5;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #242424;
+    min-height: 100vh;
+  }
+  .teams-wrap { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  /* Sidebar (decorative — Teams left rail) */
+  .rail {
+    background: #F0F0F0;
+    border-right: 1px solid #E1DFDD;
+    padding: 14px 12px;
+  }
+  .rail .team {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px; border-radius: 4px; margin-bottom: 2px;
+    color: #242424; font-size: 13.5px;
+  }
+  .rail .team .logo {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #6264A7, #B4A0FF);
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 13px;
+  }
+  .rail .team.active { background: #EBEBEB; font-weight: 600; }
+  .rail .channels { padding: 4px 0 12px 38px; }
+  .rail .ch {
+    display: block; padding: 4px 6px;
+    color: #424242; font-size: 13px;
+    border-radius: 3px;
+  }
+  .rail .ch.active { background: #E1DFDD; font-weight: 600; color: #242424; }
+  .rail .rail-section + .rail-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #E1DFDD; }
+
+  /* Main area */
+  .main { background: #FFFFFF; }
+  .channel-header {
+    padding: 14px 22px;
+    border-bottom: 1px solid #E1DFDD;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .channel-header h2 { margin: 0; font-size: 18px; font-weight: 600; color: #242424; }
+  .channel-header .tabs { display: flex; gap: 18px; margin-left: 22px; padding-left: 22px; border-left: 1px solid #E1DFDD; font-size: 13.5px; color: #616161; }
+  .channel-header .tabs .tab { color: #616161; }
+  .channel-header .tabs .tab.active { color: #242424; border-bottom: 2px solid #6264A7; padding-bottom: 12px; margin-bottom: -14px; }
+
+  /* Demo banner */
+  .demo-banner {
+    background: linear-gradient(135deg, rgba(124,58,237,0.10), rgba(56,189,248,0.08));
+    border: 1px solid rgba(124,58,237,0.30);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 14px 22px 0;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .demo-banner strong { color: #5b21b6; }
+
+  /* Posts area */
+  .posts { padding: 18px 22px 32px; }
+  .post {
+    display: grid; grid-template-columns: 32px 1fr;
+    gap: 10px; padding: 6px 0;
+  }
+  .post .avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #6264A7, #4F52B2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 13px;
+  }
+  .post-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .post-meta .author { font-weight: 700; font-size: 14px; color: #242424; }
+  .post-meta .app-pill { background: #EBEBEB; color: #616161; font-size: 11px; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+  .post-meta .time { font-size: 12px; color: #616161; }
+
+  /* Adaptive Card */
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E1DFDD;
+    border-radius: 8px;
+    box-shadow: 0 1.6px 3.6px rgba(0,0,0,0.08), 0 0.3px 0.9px rgba(0,0,0,0.06);
+    overflow: hidden;
+    max-width: 720px;
+  }
+  .card-title-bar {
+    background: linear-gradient(135deg, #6264A7 0%, #4F52B2 100%);
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 17px; font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .card-title-bar .ms-link { background: rgba(255,255,255,0.18); padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #fff; text-decoration: none; font-weight: 500; }
+  .card-title-bar .ms-link:hover { background: rgba(255,255,255,0.28); }
+
+  /* Activity section */
+  .activity {
+    padding: 16px 20px;
+    border-bottom: 1px solid #F3F2F1;
+  }
+  .activity:last-child { border-bottom: none; }
+  .activity-title {
+    margin: 0 0 4px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #242424;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .activity-subtitle {
+    color: #616161;
+    font-size: 12.5px;
+    margin: 0 0 12px;
+  }
+  .activity-subtitle a { color: #6264A7; text-decoration: none; font-weight: 600; }
+  .activity-subtitle a:hover { text-decoration: underline; }
+
+  /* Facts grid (KPI / status breakdown) */
+  .facts {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .fact {
+    background: #FAF9F8;
+    border: 1px solid #EDEBE9;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .fact .name { color: #616161; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .fact .value { color: #242424; font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.1; }
+  .fact .value a { color: #6264A7; text-decoration: none; }
+
+  /* Activity text — markdown-style list */
+  .ml { list-style: none; padding: 0; margin: 6px 0 0; }
+  .ml li { padding: 4px 0; font-size: 13.5px; color: #242424; line-height: 1.5; }
+  .ml li .key { font-family: Consolas, "Courier New", monospace; color: #6264A7; font-weight: 700; background: #F3F2F1; padding: 1px 6px; border-radius: 3px; text-decoration: none; font-size: 12.5px; }
+  .ml li .meta { color: #616161; font-size: 12.5px; }
+  .ml li em { color: #616161; font-style: italic; }
+
+  /* Pulsating dot */
+  .dot-pulse {
+    position: relative;
+    display: inline-block;
+    width: 8px; height: 8px;
+    margin-left: 4px;
+    background: #6264A7;
+    border-radius: 50%;
+    cursor: help;
+    vertical-align: middle;
+  }
+  .dot-pulse::before {
+    content: ""; position: absolute; inset: -5px;
+    border-radius: 50%; background: rgba(98,100,167,0.40);
+    animation: dot-pulse-ring 1.8s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes dot-pulse-ring { 0%{transform:scale(.5);opacity:.9} 100%{transform:scale(2.4);opacity:0} }
+  .dot-pulse::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 10px); left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: max-content; max-width: 280px;
+    background: #242424; color: #fff;
+    padding: 8px 12px; border-radius: 6px;
+    font-size: 12px; line-height: 1.4; text-align: left; font-weight: 400;
+    box-shadow: 0 10px 28px -8px rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none;
+    transition: opacity 150ms ease, transform 150ms ease;
+    z-index: 50;
+  }
+  .dot-pulse:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Reactions */
+  .reactions { margin-top: 10px; display: flex; gap: 6px; }
+  .react { background: #F3F2F1; border: 1px solid #EDEBE9; border-radius: 12px; padding: 2px 8px; font-size: 12px; display: inline-flex; gap: 4px; align-items: center; color: #242424; }
+  .react.first { background: #EFF6FC; border-color: #6264A7; color: #6264A7; }
+
+  /* Modal */
+  #demo-modal { display: none; position: fixed; inset: 0; background: rgba(36,36,36,0.55); backdrop-filter: blur(2px); z-index: 1000; align-items: center; justify-content: center; }
+  #demo-modal.open { display: flex; }
+  .modal-card { background: #fff; border-radius: 10px; max-width: 540px; width: calc(100% - 40px); padding: 22px; box-shadow: 0 24px 60px -16px rgba(0,0,0,0.5); }
+  .modal-head { display: flex; gap: 12px; margin-bottom: 12px; }
+  .modal-head h3 { margin: 0; font-size: 15px; color: #242424; }
+  .modal-head p { margin: 2px 0 0; color: #616161; font-size: 13px; }
+  .modal-jql { background: #FAF9F8; border: 1px solid #EDEBE9; border-radius: 6px; padding: 10px 12px; font-family: Consolas, "Courier New", monospace; font-size: 12.5px; color: #242424; word-break: break-word; margin: 0 0 14px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .modal-actions a, .modal-actions button { padding: 7px 14px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; text-decoration: none; }
+  .modal-actions .primary { background: #6264A7; color: #fff; }
+  .modal-actions .secondary { background: #fff; color: #242424; border-color: #E1DFDD; }
+
+  @media (max-width: 720px) { .teams-wrap { grid-template-columns: 1fr; } .rail { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="teams-wrap">
+
+  <!-- Teams left rail -->
+  <aside class="rail">
+    <div class="rail-section">
+      <div class="team active"><span class="logo">YT</span><span>your-team</span></div>
+      <div class="channels">
+        <a class="ch" href="#">General</a>
+        <a class="ch active" href="#"># Engineering daily</a>
+        <a class="ch" href="#">Product</a>
+        <a class="ch" href="#">Incidents</a>
+      </div>
+    </div>
+    <div class="rail-section">
+      <div class="team"><span class="logo" style="background:linear-gradient(135deg,#4caf50,#1b5e20)">CS</span><span>customer-success</span></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <header class="channel-header">
+      <h2># Engineering daily</h2>
+      <div class="tabs">
+        <span class="tab active">Posts</span>
+        <span class="tab">Files</span>
+        <span class="tab">Wiki</span>
+      </div>
+    </header>
+
+    <div class="demo-banner">
+      <span style="font-size:18px">💡</span>
+      <span><strong>This is a sample Teams card.</strong> Configurable in <code style="background:#F3F2F1;padding:1px 5px;border-radius:3px">config/digest.yml</code> · <strong>hover the purple dots</strong> for what's customizable · <strong>click anything</strong> to see the Jira query behind it.</span>
+    </div>
+
+    <div class="posts">
+
+      <div class="post">
+        <div class="avatar">JD</div>
+        <div style="flex:1">
+          <div class="post-meta">
+            <span class="author">jira-digest</span>
+            <span class="app-pill">APP</span>
+            <span class="time">Today 8:00 AM</span>
+          </div>
+
+          <!-- Adaptive card -->
+          <div class="card">
+
+            <!-- Title bar -->
+            <div class="card-title-bar">
+              <span>📬 Daily Jira digest — 2026-05-26</span>
+              <a class="ms-link demo-link" data-jql="full digest html (hosted as gist)">📄 View full digest</a>
+            </div>
+
+            <!-- Activity 1: KPI -->
+            <div class="activity">
+              <div class="activity-title">Key metrics <span class="dot-pulse" tabindex="0" data-tooltip="Each metric is its own JQL count. Add as many counters as you need."></span></div>
+              <div class="activity-subtitle"><a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done'>View in Jira ↗</a></div>
+              <div class="facts">
+                <div class="fact"><div class="name">Open</div><div class="value"><a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done'>127</a></div></div>
+                <div class="fact"><div class="name">New (7d)</div><div class="value"><a href="#" class="demo-link" data-jql='project = PROJ AND created >= -7d'>12</a></div></div>
+                <div class="fact"><div class="name">Closed (7d)</div><div class="value"><a href="#" class="demo-link" data-jql='project = PROJ AND resolved >= -7d'>18</a></div></div>
+                <div class="fact"><div class="name">Critical</div><div class="value" style="color:#DE350B"><a href="#" class="demo-link" data-jql='project = PROJ AND priority IN (Highest, High) AND statusCategory != Done' style="color:#DE350B">8</a></div></div>
+              </div>
+            </div>
+
+            <!-- Activity 2: Critical & high -->
+            <div class="activity">
+              <div class="activity-title">Critical &amp; high priority — open <span class="dot-pulse" tabindex="0" data-tooltip="Pick JQL, columns, sort, and limit. Teams cards have payload limits — the full digest link at top has everything."></span></div>
+              <div class="activity-subtitle"><a href="#" class="demo-link" data-jql='project = PROJ AND priority IN (Highest, High) AND statusCategory != Done ORDER BY days_in_status DESC'>View in Jira ↗</a> · showing 5 of 12</div>
+              <ul class="ml">
+                <li><a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a> SSO login intermittently fails for SAML users <span class="meta">· @alice · <span style="color:#DE350B;font-weight:700">Highest</span> · 31d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-1018">PROJ-1018</a> Billing webhook silently drops retries after 3 failures <span class="meta">· @ben · <span style="color:#FF8B00;font-weight:700">High</span> · 18d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a> Onboarding email duplicated when invite resent within 5 min <span class="meta">· @carol · <span style="color:#FF8B00;font-weight:700">High</span> · 12d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a> Dashboard widget timeout on accounts with 1k+ projects <span class="meta">· @david · <span style="color:#FF8B00;font-weight:700">High</span> · 8d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a> CSV export drops Unicode chars in customer-facing reports <span class="meta">· @elena · <span style="color:#FF8B00;font-weight:700">High</span> · 5d</span></li>
+              </ul>
+            </div>
+
+            <!-- Activity 3: Status breakdown -->
+            <div class="activity">
+              <div class="activity-title">Status breakdown <span class="dot-pulse" tabindex="0" data-tooltip="Edit statuses.active in config to control which statuses appear. Zero-count statuses are kept on purpose."></span></div>
+              <div class="activity-subtitle"><a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done'>View in Jira ↗</a> · total: 127</div>
+              <div class="facts">
+                <div class="fact"><div class="name">In Progress</div><div class="value">42</div></div>
+                <div class="fact"><div class="name">To Do</div><div class="value">38</div></div>
+                <div class="fact"><div class="name">In Review</div><div class="value">24</div></div>
+                <div class="fact"><div class="name">Awaiting Customer</div><div class="value">18</div></div>
+                <div class="fact"><div class="name">Blocked</div><div class="value" style="color:#DE350B">5</div></div>
+                <div class="fact"><div class="name">Open</div><div class="value" style="color:#9E9E9E">0</div></div>
+              </div>
+            </div>
+
+            <!-- Activity 4: Stuck items -->
+            <div class="activity">
+              <div class="activity-title">Stuck — no status change in 30+ days <span class="dot-pulse" tabindex="0" data-tooltip="Set threshold_days (14, 30, 90...). Dwell time uses Jira's changelog — accurate to the day."></span></div>
+              <div class="activity-subtitle"><a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND days_in_status >= 30'>View in Jira ↗</a> · showing 4 of 7 stuck</div>
+              <ul class="ml">
+                <li><a class="key demo-link" data-jql="key = PROJ-0731">PROJ-0731</a> Salesforce sync edge case for accounts with custom-field overrides <span class="meta">· In Progress · 89d · @alice</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0844">PROJ-0844</a> Webhooks dropped after retry threshold for high-volume tenants <span class="meta">· To Do · 54d · (unassigned)</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0807">PROJ-0807</a> Audit log truncation on enterprise plans during peak hours <span class="meta">· In Review · 47d · @ben</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0901">PROJ-0901</a> Bulk import error messaging unclear for partial-success cases <span class="meta">· Awaiting Customer · 33d · @carol</span></li>
+              </ul>
+            </div>
+
+            <!-- Activity 5: Top accounts -->
+            <div class="activity">
+              <div class="activity-title">Top customer accounts <span class="dot-pulse" tabindex="0" data-tooltip="Group by any field. Custom fields work via the alias map — write 'customer_account' in JQL, the script swaps in customfield_XXXXX."></span></div>
+              <div class="activity-subtitle"><a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" IS NOT EMPTY ORDER BY "deal_amount" DESC'>View in Jira ↗</a> · showing 5 of 14</div>
+              <ul class="ml">
+                <li><strong>Northstar Logistics</strong> — 18 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a>, <a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a>, <a class="key demo-link" data-jql="key = PROJ-0901">PROJ-0901</a></li>
+                <li><strong>Pacific Foods</strong> — 14 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1101">PROJ-1101</a>, <a class="key demo-link" data-jql="key = PROJ-0844">PROJ-0844</a></li>
+                <li><strong>Meridian Health</strong> — 11 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1100">PROJ-1100</a>, <a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a></li>
+                <li><strong>Atlas Manufacturing</strong> — 9 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a></li>
+                <li><strong>Continental Energy</strong> — 7 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0807">PROJ-0807</a></li>
+              </ul>
+            </div>
+
+          </div>
+
+          <!-- Reactions -->
+          <div class="reactions">
+            <span class="react first">👍 <strong>5</strong></span>
+            <span class="react">👀 <strong>3</strong></span>
+            <span class="react">🔥 <strong>1</strong></span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Click modal -->
+<div id="demo-modal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span style="font-size:22px">🔗</span>
+      <div>
+        <h3>In your real digest, this opens the live Jira search:</h3>
+        <p>Activity titles, ticket keys, KPI numbers, and status names all deep-link to filtered Jira queries.</p>
+      </div>
+    </div>
+    <pre class="modal-jql" id="demo-modal-jql">project = PROJ ORDER BY created DESC</pre>
+    <div class="modal-actions">
+      <a class="secondary" href="https://github.com/darshakbhatt-aiproductlabs/jira-digest" target="_blank" rel="noopener">View the repo →</a>
+      <button class="primary" type="button" id="demo-modal-close">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var modal = document.getElementById('demo-modal');
+  var jqlEl = document.getElementById('demo-modal-jql');
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('.demo-link');
+    if (!link) return;
+    e.preventDefault();
+    jqlEl.textContent = link.dataset.jql || link.getAttribute('href') || '';
+    modal.classList.add('open');
+  });
+  function close() { modal.classList.remove('open'); }
+  document.getElementById('demo-modal-close').addEventListener('click', close);
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
+
+</body>
+</html>

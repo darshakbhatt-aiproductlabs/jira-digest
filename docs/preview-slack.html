@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>jira-digest — Slack preview</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    background: #1A1D21;       /* Slack dark sidebar color */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #1D1C1D;
+    min-height: 100vh;
+  }
+  .slack-wrap { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    background: #19171D;
+    color: #BCABBC;
+    padding: 18px 14px;
+    font-size: 13.5px;
+  }
+  .workspace { display: flex; align-items: center; gap: 8px; padding: 6px 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+  .workspace-logo { width: 28px; height: 28px; background: linear-gradient(135deg,#a78bfa,#38bdf8); border-radius: 6px; }
+  .workspace-name { color: #fff; font-weight: 700; font-size: 15px; }
+  .channel-section { margin-top: 10px; }
+  .channel-section .label { color: #BCABBC; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 8px; opacity: 0.8; }
+  .channel-list { list-style: none; padding: 0; margin: 0; }
+  .channel-list li { padding: 5px 8px; display: flex; gap: 8px; align-items: center; border-radius: 4px; color: #d8d2d8; }
+  .channel-list li.active { background: #1264A3; color: #fff; }
+  .channel-list .hash { opacity: 0.7; }
+
+  /* Main */
+  .main { background: #FFFFFF; display: flex; flex-direction: column; }
+  .channel-header {
+    border-bottom: 1px solid #DDDDDD;
+    padding: 14px 22px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .channel-header h2 { margin: 0; font-size: 18px; font-weight: 900; }
+  .channel-header .topic { color: #616061; font-size: 13px; border-left: 1px solid #DDDDDD; margin-left: 10px; padding-left: 10px; }
+
+  /* Message */
+  .msg-list { padding: 18px 22px 28px; }
+  .msg {
+    display: grid; grid-template-columns: 36px 1fr;
+    gap: 10px; padding: 6px 0;
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #4A154B, #ECB22E);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 15px;
+  }
+  .msg-body { font-size: 15px; line-height: 1.5; }
+  .msg-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .msg-author { font-weight: 900; font-size: 15px; color: #1D1C1D; }
+  .msg-app { background: #E8E8E8; color: #616061; font-size: 11px; padding: 1px 4px; border-radius: 3px; font-weight: 700; letter-spacing: 0.02em; }
+  .msg-time { color: #616061; font-size: 12px; }
+
+  /* Block Kit elements */
+  .bk-header { font-size: 22px; font-weight: 900; line-height: 1.2; margin: 6px 0 4px; color: #1D1C1D; }
+  .bk-divider { border: 0; border-top: 1px solid #E8E8E8; margin: 12px 0; }
+  .bk-section { margin: 8px 0; }
+  .bk-section a { color: #1264A3; text-decoration: none; font-weight: 700; }
+  .bk-section a:hover { text-decoration: underline; }
+  .bk-context {
+    display: flex; align-items: center; gap: 8px;
+    color: #616061; font-size: 13px;
+    margin: 8px 0 4px;
+  }
+  .bk-context .ico { font-size: 14px; }
+  .bk-button {
+    display: inline-block;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    padding: 5px 12px;
+    color: #1D1C1D;
+    background: #fff;
+    font-weight: 700; font-size: 14px;
+    text-decoration: none;
+    margin-top: 8px;
+  }
+  .bk-button:hover { border-color: #1264A3; color: #1264A3; }
+
+  /* KPI inline */
+  .kpi-row { display: flex; flex-wrap: wrap; gap: 16px 22px; padding: 2px 0; }
+  .kpi-row strong { font-size: 17px; color: #1D1C1D; font-weight: 900; }
+  .kpi-row span.k-label { color: #616061; font-size: 13px; }
+
+  /* Sublist lines (bullet-style sections) */
+  .sl { display: block; padding: 3px 0; }
+  .sl .bullet { color: #616061; margin-right: 4px; }
+  .sl .key { font-family: SFMono-Regular, Menlo, Monaco, monospace; color: #1264A3; font-weight: 700; font-size: 13.5px; background: #F4F4F4; padding: 1px 6px; border-radius: 3px; text-decoration: none; }
+  .sl .summary { color: #1D1C1D; }
+  .sl .meta { color: #616061; font-size: 13px; }
+  .sl em { color: #616061; font-style: italic; font-weight: 400; }
+
+  /* Reactions row */
+  .reactions { display: flex; gap: 6px; margin-top: 12px; }
+  .react {
+    background: #FAFAFA; border: 1px solid #DDDDDD;
+    border-radius: 14px; padding: 2px 9px; font-size: 12.5px;
+    display: inline-flex; gap: 5px; align-items: center;
+    color: #1D1C1D;
+  }
+  .react.first { background: #E8F5FE; border-color: #1264A3; color: #1264A3; }
+
+  /* Demo banner */
+  .demo-banner {
+    background: linear-gradient(135deg, rgba(124,58,237,0.10), rgba(56,189,248,0.08));
+    border: 1px solid rgba(124,58,237,0.30);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 14px 22px 0;
+    font-size: 13px; color: #1D1C1D;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .demo-banner strong { color: #5b21b6; }
+
+  /* Pulsating dot */
+  .dot-pulse {
+    position: relative;
+    display: inline-block;
+    width: 8px; height: 8px;
+    margin-left: 6px;
+    background: #6554C0;
+    border-radius: 50%;
+    cursor: help;
+    vertical-align: middle;
+  }
+  .dot-pulse::before {
+    content: ""; position: absolute; inset: -5px;
+    border-radius: 50%; background: rgba(101,84,192,0.35);
+    animation: dot-pulse-ring 1.8s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes dot-pulse-ring { 0%{transform:scale(.5);opacity:.9} 100%{transform:scale(2.4);opacity:0} }
+  .dot-pulse::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 10px); left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: max-content; max-width: 280px;
+    background: #1D1C1D; color: #fff;
+    padding: 8px 12px; border-radius: 6px;
+    font-size: 12px; line-height: 1.4; text-align: left; font-weight: 400;
+    box-shadow: 0 10px 28px -8px rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none;
+    transition: opacity 150ms ease, transform 150ms ease;
+    z-index: 50;
+  }
+  .dot-pulse:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Modal (shared with email preview) */
+  #demo-modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(9,30,66,0.55); backdrop-filter: blur(2px);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  #demo-modal.open { display: flex; }
+  .modal-card { background: #fff; border-radius: 12px; max-width: 540px; width: calc(100% - 40px); padding: 22px; box-shadow: 0 28px 80px -16px rgba(9,30,66,0.6); }
+  .modal-head { display: flex; gap: 12px; margin-bottom: 12px; }
+  .modal-head h3 { margin: 0; font-size: 15px; color: #1D1C1D; }
+  .modal-head p { margin: 2px 0 0; color: #616061; font-size: 13px; }
+  .modal-jql { background: #F4F4F4; border: 1px solid #DDDDDD; border-radius: 6px; padding: 10px 12px; font-family: SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: #1D1C1D; word-break: break-word; margin: 0 0 14px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .modal-actions a, .modal-actions button { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid transparent; text-decoration: none; }
+  .modal-actions .primary { background: #1264A3; color: #fff; }
+  .modal-actions .secondary { background: #fff; color: #1D1C1D; border-color: #DDDDDD; }
+
+  @media (max-width: 720px) { .slack-wrap { grid-template-columns: 1fr; } .sidebar { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="slack-wrap">
+
+  <!-- ╭ Slack sidebar (decorative) ╮ -->
+  <aside class="sidebar">
+    <div class="workspace">
+      <div class="workspace-logo"></div>
+      <div class="workspace-name">your-team</div>
+    </div>
+    <div class="channel-section">
+      <div class="label">Channels</div>
+      <ul class="channel-list">
+        <li><span class="hash">#</span> general</li>
+        <li class="active"><span class="hash">#</span> engineering-daily</li>
+        <li><span class="hash">#</span> incidents</li>
+        <li><span class="hash">#</span> product</li>
+        <li><span class="hash">#</span> random</li>
+      </ul>
+    </div>
+    <div class="channel-section">
+      <div class="label">Apps</div>
+      <ul class="channel-list">
+        <li>🤖 jira-digest</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- ╭ Main channel view ╮ -->
+  <main class="main">
+
+    <!-- channel header -->
+    <header class="channel-header">
+      <h2><span style="color:#616061">#</span> engineering-daily</h2>
+      <span class="topic">Pipeline health, what's stuck, who's overloaded. Auto-posted every morning by jira-digest.</span>
+    </header>
+
+    <div class="demo-banner">
+      <span style="font-size:18px">💡</span>
+      <span><strong>This is a sample Slack post.</strong> Configurable in <code style="background:#F4F4F4;padding:1px 5px;border-radius:3px">config/digest.yml</code> · <strong>hover the purple dots</strong> to see what each section controls · <strong>click anything</strong> to see the Jira query behind it.</span>
+    </div>
+
+    <!-- The bot message -->
+    <div class="msg-list">
+      <div class="msg">
+        <div class="avatar">JD</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-author">jira-digest</span>
+            <span class="msg-app">APP</span>
+            <span class="msg-time">Today at 8:00 AM</span>
+          </div>
+
+          <!-- Header block -->
+          <div class="bk-header">📬 Daily Jira digest — 2026-05-26</div>
+
+          <a class="bk-button demo-link" data-jql="full digest html (hosted as gist)">📄 View full digest in browser</a>
+
+          <hr class="bk-divider">
+
+          <!-- Section: KPI -->
+          <div class="bk-section">
+            <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done'><strong>Key metrics</strong></a>
+            <span class="dot-pulse" tabindex="0" data-tooltip="Each metric is its own JQL count — add/remove any number of counters."></span>
+            <div class="kpi-row" style="margin-top:6px">
+              <span><a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done'><strong>127</strong></a> <span class="k-label">Open</span></span>
+              <span><a href="#" class="demo-link" data-jql='project = PROJ AND created >= -7d'><strong>12</strong></a> <span class="k-label">New (7d)</span></span>
+              <span><a href="#" class="demo-link" data-jql='project = PROJ AND resolved >= -7d'><strong>18</strong></a> <span class="k-label">Closed (7d)</span></span>
+              <span><a href="#" class="demo-link" data-jql='project = PROJ AND priority IN (Highest, High) AND statusCategory != Done'><strong>8</strong></a> <span class="k-label">Critical</span></span>
+            </div>
+          </div>
+
+          <hr class="bk-divider">
+
+          <!-- Section: Critical & high -->
+          <div class="bk-section">
+            <a href="#" class="demo-link" data-jql='project = PROJ AND priority IN (Highest, High) AND statusCategory != Done ORDER BY days_in_status DESC'><strong>Critical &amp; high priority — open</strong></a>
+            <em style="color:#616061">  showing 5 of 12 — view in Jira ↗</em>
+            <span class="dot-pulse" tabindex="0" data-tooltip="Set JQL, columns, sort, and limit. Slack truncates long lists — pair with the 'view full digest' link above."></span>
+            <div style="margin-top:6px">
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a> <span class="summary">SSO login intermittently fails for SAML users</span> <span class="meta">· @alice · <span style="color:#DE350B">Highest</span> · 31d</span></span>
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-1018">PROJ-1018</a> <span class="summary">Billing webhook silently drops retries after 3 failures</span> <span class="meta">· @ben · <span style="color:#FF8B00">High</span> · 18d</span></span>
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a> <span class="summary">Onboarding email duplicated when invite resent within 5 min</span> <span class="meta">· @carol · <span style="color:#FF8B00">High</span> · 12d</span></span>
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a> <span class="summary">Dashboard widget timeout on accounts with 1k+ projects</span> <span class="meta">· @david · <span style="color:#FF8B00">High</span> · 8d</span></span>
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a> <span class="summary">CSV export drops Unicode chars in customer-facing reports</span> <span class="meta">· @elena · <span style="color:#FF8B00">High</span> · 5d</span></span>
+            </div>
+          </div>
+
+          <hr class="bk-divider">
+
+          <!-- Section: Status breakdown -->
+          <div class="bk-section">
+            <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done'><strong>Status breakdown</strong></a>
+            <em style="color:#616061">  (total: 127 — view in Jira ↗)</em>
+            <span class="dot-pulse" tabindex="0" data-tooltip="Status counts. Zero-count statuses are shown intentionally so stalls stand out."></span>
+            <div style="margin-top:6px;font-family:SFMono-Regular,Menlo,monospace;font-size:13.5px;line-height:1.7">
+              <div><code style="background:#F4F4F4;padding:1px 4px;border-radius:3px">  42</code>  In Progress</div>
+              <div><code style="background:#F4F4F4;padding:1px 4px;border-radius:3px">  38</code>  To Do</div>
+              <div><code style="background:#F4F4F4;padding:1px 4px;border-radius:3px">  24</code>  In Review</div>
+              <div><code style="background:#F4F4F4;padding:1px 4px;border-radius:3px">  18</code>  Awaiting Customer</div>
+              <div><code style="background:#F4F4F4;padding:1px 4px;border-radius:3px">   5</code>  Blocked</div>
+              <div><code style="background:#F4F4F4;padding:1px 4px;border-radius:3px">   0</code>  <span style="color:#616061">Open</span></div>
+            </div>
+          </div>
+
+          <hr class="bk-divider">
+
+          <!-- Section: Stuck items -->
+          <div class="bk-section">
+            <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND days_in_status >= 30'><strong>Stuck — no status change in 30+ days</strong></a>
+            <em style="color:#616061">  showing 4 of 7 stuck ≥ 30d — view in Jira ↗</em>
+            <span class="dot-pulse" tabindex="0" data-tooltip="Changelog-based stuck detection. Configure threshold_days (14, 30, 90...) and which fields to show."></span>
+            <div style="margin-top:6px">
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-0731">PROJ-0731</a> <span class="summary">Salesforce sync edge case for accounts with custom-field overrides</span> <span class="meta">· In Progress · 89d · @alice</span></span>
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-0844">PROJ-0844</a> <span class="summary">Webhooks dropped after retry threshold for high-volume tenants</span> <span class="meta">· To Do · 54d · (unassigned)</span></span>
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-0807">PROJ-0807</a> <span class="summary">Audit log truncation on enterprise plans during peak hours</span> <span class="meta">· In Review · 47d · @ben</span></span>
+              <span class="sl"><span class="bullet">•</span> <a class="key demo-link" data-jql="key = PROJ-0901">PROJ-0901</a> <span class="summary">Bulk import error messaging unclear for partial-success cases</span> <span class="meta">· Awaiting Customer · 33d · @carol</span></span>
+            </div>
+          </div>
+
+          <hr class="bk-divider">
+
+          <!-- Section: Top accounts -->
+          <div class="bk-section">
+            <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" IS NOT EMPTY ORDER BY "deal_amount" DESC'><strong>Top customer accounts by open ticket count</strong></a>
+            <em style="color:#616061">  showing 5 of 14 — view in Jira ↗</em>
+            <span class="dot-pulse" tabindex="0" data-tooltip="Group by any field — customer, assignee, component, severity. Custom fields work via the alias map in config."></span>
+            <div style="margin-top:6px">
+              <span class="sl"><strong>Northstar Logistics</strong> — 18 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a>, <a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a>, <a class="key demo-link" data-jql="key = PROJ-0901">PROJ-0901</a></span>
+              <span class="sl"><strong>Pacific Foods</strong> — 14 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1101">PROJ-1101</a>, <a class="key demo-link" data-jql="key = PROJ-0844">PROJ-0844</a></span>
+              <span class="sl"><strong>Meridian Health</strong> — 11 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1100">PROJ-1100</a>, <a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a></span>
+              <span class="sl"><strong>Atlas Manufacturing</strong> — 9 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a></span>
+              <span class="sl"><strong>Continental Energy</strong> — 7 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0807">PROJ-0807</a></span>
+            </div>
+          </div>
+
+          <hr class="bk-divider">
+
+          <!-- Footer / context -->
+          <div class="bk-context">
+            <span class="ico">🤖</span>
+            <span>Generated 2026-05-26 08:00 IST · <a href="#" class="demo-link" data-jql="run on GitHub Actions" style="color:#616061;text-decoration:underline">workflow run</a> · jira-digest</span>
+          </div>
+
+          <!-- Reactions (decorative) -->
+          <div class="reactions">
+            <span class="react first">👀 <strong>4</strong></span>
+            <span class="react">✅ <strong>2</strong></span>
+            <span class="react">🔥 <strong>1</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Click modal -->
+<div id="demo-modal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span style="font-size:22px">🔗</span>
+      <div>
+        <h3>In your real digest, this opens the live Jira search:</h3>
+        <p>Section titles, ticket keys, KPI numbers, and status names all deep-link to filtered Jira queries.</p>
+      </div>
+    </div>
+    <pre class="modal-jql" id="demo-modal-jql">project = PROJ ORDER BY created DESC</pre>
+    <div class="modal-actions">
+      <a class="secondary" href="https://github.com/darshakbhatt-aiproductlabs/jira-digest" target="_blank" rel="noopener">View the repo →</a>
+      <button class="primary" type="button" id="demo-modal-close">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var modal = document.getElementById('demo-modal');
+  var jqlEl = document.getElementById('demo-modal-jql');
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('.demo-link');
+    if (!link) return;
+    e.preventDefault();
+    jqlEl.textContent = link.dataset.jql || link.getAttribute('href') || '';
+    modal.classList.add('open');
+  });
+  function close() { modal.classList.remove('open'); }
+  document.getElementById('demo-modal-close').addEventListener('click', close);
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
+
+</body>
+</html>
