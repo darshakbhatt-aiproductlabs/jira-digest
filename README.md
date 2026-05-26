@@ -4,9 +4,9 @@
 >
 > Pipeline health, what's critical, what's stuck, who's overloaded, what came in overnight — delivered to your inbox, Slack channel, or Teams channel before standup. No dashboards to babysit. No saved-filter gymnastics. No servers to run.
 
-### 🌐 **[Live demo &amp; landing page →](https://darshakbhatt-aiproductlabs.github.io/jira-digest/)**
+### 🌐 <a href="https://darshakbhatt-aiproductlabs.github.io/jira-digest/" target="_blank" rel="noopener noreferrer"><strong>Live demo &amp; landing page →</strong></a>
 
-See a rendered example digest, feature overview, and the 3-step setup walkthrough.
+See a rendered example digest, feature overview, and the 3-step setup walkthrough. *(Opens in a new tab.)*
 
 ---
 

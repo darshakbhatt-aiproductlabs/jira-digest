@@ -1,0 +1,45 @@
+name: Deploy GitHub Pages
+
+# Modern Actions-based Pages deploy. Replaces the legacy "build from branch"
+# pipeline, which was returning generic "Page build failed" errors with no
+# diagnostic detail. This workflow uploads docs/ as a Pages artifact and
+# deploys it directly — no Jekyll, no surprises.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# Pages deploy needs these scopes; they're scoped to this workflow only.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't overlap deploys.
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
