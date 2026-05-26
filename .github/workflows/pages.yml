@@ -29,7 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v4
+      # configure-pages omitted — needed only for Jekyll-aware base URL
+      # rewrites, which doesn't apply to our static HTML.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs
