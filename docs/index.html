@@ -311,7 +311,8 @@
     }
     .preview-iframe {
       width: 100%;
-      height: 760px;
+      height: 760px;          /* fallback until JS resizes to content */
+      min-height: 600px;
       border: 0;
       background: white;
       display: block;
@@ -324,6 +325,7 @@
       font-size: 13px;
       font-style: italic;
     }
+    .preview-caption strong { color: var(--accent); font-style: normal; }
 
     /* ──────────────── features ──────────────── */
     .feature-grid {
@@ -598,11 +600,18 @@
           <span class="email-dot green"></span>
           <span class="email-meta">📧 Inbox · Daily Jira digest — example</span>
         </div>
-        <iframe src="preview.html" class="preview-iframe" loading="lazy" title="Sample jira-digest email rendering"></iframe>
+        <iframe
+          id="preview-iframe"
+          src="preview.html"
+          class="preview-iframe"
+          loading="lazy"
+          title="Sample jira-digest email rendering"
+          onload="(function(f){try{f.style.height = (f.contentWindow.document.body.scrollHeight + 24) + 'px';}catch(e){}})(this)"
+        ></iframe>
       </div>
       <p class="preview-caption">
+        <strong>Hover the pulsating purple dots</strong> next to each section title to see what's configurable.
         Company names, ticket summaries, and counts are fabricated for this preview.
-        The structure and styling are identical to a real digest.
       </p>
     </div>
   </section>
