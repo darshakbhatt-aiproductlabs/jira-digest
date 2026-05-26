@@ -89,7 +89,12 @@ def _section_blocks(section: dict[str, Any], jira_base: str) -> list[dict[str, A
     elif kind == "groups":
         lines = []
         for g in section["data"]:
-            line = f"*{g['name']}* — {g['count']}"
+            # Group name links to the Jira search for that specific group.
+            if g.get("jql"):
+                name_md = f"<{search_url(jira_base, g['jql'])}|*{g['name']}*>"
+            else:
+                name_md = f"*{g['name']}*"
+            line = f"{name_md} — {g['count']}"
             if g.get("samples"):
                 sample_keys = ", ".join(_issue_link(jira_base, s.get("key")) for s in g["samples"])
                 line += f"\n   _e.g._ {sample_keys}"
@@ -127,6 +132,14 @@ def render_slack(sections: list[dict[str, Any]], *, title: str, jira_base: str,
         if web_url:
             msg = f"_…truncated. <{web_url}|View the full digest in browser> for everything._"
         blocks.append({"type": "context", "elements": [{"type": "mrkdwn", "text": msg}]})
+
+    # Bottom CTA — full digest link repeated at the bottom (people scroll all
+    # the way down before deciding to act, and Slack's top is busy).
+    if web_url and len(blocks) < SLACK_MAX_BLOCKS - 3:
+        blocks.append({"type": "divider"})
+        blocks.append({"type": "section", "text": {"type": "mrkdwn",
+                       "text": f"📄 <{web_url}|*Open the full digest in browser*>  "
+                               f"_(every section, no truncation)_"}})
 
     if footer:
         blocks.append({"type": "context", "elements": [{"type": "mrkdwn", "text": footer}]})

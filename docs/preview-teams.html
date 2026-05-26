@@ -275,11 +275,11 @@
               <div class="activity-title">Critical &amp; high priority — open <span class="dot-pulse" tabindex="0" data-tooltip="Pick JQL, columns, sort, and limit. Teams cards have payload limits — the full digest link at top has everything."></span></div>
               <div class="activity-subtitle"><a href="#" class="demo-link" data-jql='project = PROJ AND priority IN (Highest, High) AND statusCategory != Done ORDER BY days_in_status DESC'>View in Jira ↗</a> · showing 5 of 12</div>
               <ul class="ml">
-                <li><a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a> SSO login intermittently fails for SAML users <span class="meta">· @alice · <span style="color:#DE350B;font-weight:700">Highest</span> · 31d</span></li>
-                <li><a class="key demo-link" data-jql="key = PROJ-1018">PROJ-1018</a> Billing webhook silently drops retries after 3 failures <span class="meta">· @ben · <span style="color:#FF8B00;font-weight:700">High</span> · 18d</span></li>
-                <li><a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a> Onboarding email duplicated when invite resent within 5 min <span class="meta">· @carol · <span style="color:#FF8B00;font-weight:700">High</span> · 12d</span></li>
-                <li><a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a> Dashboard widget timeout on accounts with 1k+ projects <span class="meta">· @david · <span style="color:#FF8B00;font-weight:700">High</span> · 8d</span></li>
-                <li><a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a> CSV export drops Unicode chars in customer-facing reports <span class="meta">· @elena · <span style="color:#FF8B00;font-weight:700">High</span> · 5d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a> SSO login intermittently fails for SAML users <span class="meta">· @alice · <a class="demo-link" data-jql='project = PROJ AND priority = "Highest" AND statusCategory != Done' style="color:#DE350B;font-weight:700;text-decoration:none">Highest</a> · 31d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-1018">PROJ-1018</a> Billing webhook silently drops retries after 3 failures <span class="meta">· @ben · <a class="demo-link" data-jql='project = PROJ AND priority = "High" AND statusCategory != Done' style="color:#FF8B00;font-weight:700;text-decoration:none">High</a> · 18d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a> Onboarding email duplicated when invite resent within 5 min <span class="meta">· @carol · <a class="demo-link" data-jql='project = PROJ AND priority = "High" AND statusCategory != Done' style="color:#FF8B00;font-weight:700;text-decoration:none">High</a> · 12d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a> Dashboard widget timeout on accounts with 1k+ projects <span class="meta">· @david · <a class="demo-link" data-jql='project = PROJ AND priority = "High" AND statusCategory != Done' style="color:#FF8B00;font-weight:700;text-decoration:none">High</a> · 8d</span></li>
+                <li><a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a> CSV export drops Unicode chars in customer-facing reports <span class="meta">· @elena · <a class="demo-link" data-jql='project = PROJ AND priority = "High" AND statusCategory != Done' style="color:#FF8B00;font-weight:700;text-decoration:none">High</a> · 5d</span></li>
               </ul>
             </div>
 
@@ -314,12 +314,21 @@
               <div class="activity-title">Top customer accounts <span class="dot-pulse" tabindex="0" data-tooltip="Group by any field. Custom fields work via the alias map — write 'customer_account' in JQL, the script swaps in customfield_XXXXX."></span></div>
               <div class="activity-subtitle"><a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" IS NOT EMPTY ORDER BY "deal_amount" DESC'>View in Jira ↗</a> · showing 5 of 14</div>
               <ul class="ml">
-                <li><strong>Northstar Logistics</strong> — 18 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a>, <a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a>, <a class="key demo-link" data-jql="key = PROJ-0901">PROJ-0901</a></li>
-                <li><strong>Pacific Foods</strong> — 14 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1101">PROJ-1101</a>, <a class="key demo-link" data-jql="key = PROJ-0844">PROJ-0844</a></li>
-                <li><strong>Meridian Health</strong> — 11 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1100">PROJ-1100</a>, <a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a></li>
-                <li><strong>Atlas Manufacturing</strong> — 9 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a></li>
-                <li><strong>Continental Energy</strong> — 7 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0807">PROJ-0807</a></li>
+                <li><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Northstar Logistics"' style="color:#6264A7;font-weight:700;text-decoration:none">Northstar Logistics</a> — 18 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1024">PROJ-1024</a>, <a class="key demo-link" data-jql="key = PROJ-0982">PROJ-0982</a>, <a class="key demo-link" data-jql="key = PROJ-0901">PROJ-0901</a></li>
+                <li><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Pacific Foods"' style="color:#6264A7;font-weight:700;text-decoration:none">Pacific Foods</a> — 14 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1101">PROJ-1101</a>, <a class="key demo-link" data-jql="key = PROJ-0844">PROJ-0844</a></li>
+                <li><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Meridian Health"' style="color:#6264A7;font-weight:700;text-decoration:none">Meridian Health</a> — 11 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-1100">PROJ-1100</a>, <a class="key demo-link" data-jql="key = PROJ-0931">PROJ-0931</a></li>
+                <li><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Atlas Manufacturing"' style="color:#6264A7;font-weight:700;text-decoration:none">Atlas Manufacturing</a> — 9 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0964">PROJ-0964</a></li>
+                <li><a class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "customer_account" = "Continental Energy"' style="color:#6264A7;font-weight:700;text-decoration:none">Continental Energy</a> — 7 open <em>e.g.</em> <a class="key demo-link" data-jql="key = PROJ-0807">PROJ-0807</a></li>
               </ul>
+            </div>
+
+            <!-- Bottom full-digest CTA (mirrors the top button) -->
+            <div class="activity" style="background:#FAF9F8">
+              <div class="activity-title" style="display:flex;align-items:center;gap:10px">
+                <span>📄</span><span>Open the full digest in browser</span>
+              </div>
+              <div class="activity-subtitle" style="margin-bottom:10px">Every section, no truncation — useful when this card hits Teams' payload limit.</div>
+              <a class="demo-link" data-jql="full digest html (hosted as gist)" style="display:inline-block;background:#6264A7;color:#fff;padding:7px 14px;border-radius:4px;text-decoration:none;font-weight:600;font-size:13px">Open full digest →</a>
             </div>
 
             <!-- Activity 6: Handoff CTA -->

@@ -55,7 +55,13 @@ def _markdown_from_groups(data: list[dict[str, Any]], jira_base: str) -> str:
     base = jira_base.rstrip("/")
     out = []
     for g in data:
-        line = f"**{g['name']}** — {g['count']}"
+        # Group name → Jira deep-link filtered to that group.
+        if g.get("jql"):
+            url = search_url(jira_base, g["jql"])
+            name_md = f"[**{g['name']}**]({url})"
+        else:
+            name_md = f"**{g['name']}**"
+        line = f"{name_md} — {g['count']}"
         samples = [f"[{s.get('key')}]({base}/browse/{s.get('key')})"
                    for s in g.get("samples", []) if s.get("key")]
         if samples:
@@ -103,6 +109,14 @@ def _build_card(sections: list[dict[str, Any]], title: str, jira_base: str,
             block["text"] = f"_{s.get('empty_message') or 'No matching issues.'}_"
 
         card_sections.append(block)
+
+    # Bottom CTA — repeat the full-digest link at the end so it's visible
+    # after the recipient has scrolled the card.
+    if web_url:
+        card_sections.append({
+            "activityTitle": "📄 Open the full digest in browser",
+            "text": f"[Every section, no truncation]({web_url})",
+        })
 
     return {
         "@type": "MessageCard",

@@ -167,11 +167,24 @@ def _empty_cell() -> str:
     return '<span style="color:#999">—</span>'
 
 
-def _cell_for(col: str, value: Any, jira_base: str) -> tuple[str, str]:
+def _wrap_link(inner_html: str, url: str | None) -> str:
+    """Wrap an already-styled inner HTML in a Jira deep-link if a URL is given."""
+    if not url:
+        return inner_html
+    return (
+        f'<a href="{escape(url)}" style="text-decoration:none;color:inherit;'
+        f'display:inline-block">{inner_html}</a>'
+    )
+
+
+def _cell_for(col: str, value: Any, jira_base: str,
+              section_jql: str | None = None) -> tuple[str, str]:
     """Return (cell_inner_html, extra_td_style) for a (column, value) pair.
 
     Auto-detects column type from the column name and applies appropriate
-    formatting (badges, money, ticket link). Falls back to plain escaped text.
+    formatting (badges, money, ticket link). If `section_jql` is supplied,
+    priority and status cells get wrapped in a Jira deep-link that filters
+    the section's query by the cell's value.
     """
     if value is None or value == "":
         return _empty_cell(), ""
@@ -187,11 +200,18 @@ def _cell_for(col: str, value: Any, jira_base: str) -> tuple[str, str]:
     if _PRIORITY_COLS.match(col):
         pill = _priority_badge(value)
         if pill:
+            # Clickable priority pill → filtered Jira search
+            if section_jql:
+                url = search_url(jira_base, f'({section_jql}) AND priority = "{value}"')
+                return _wrap_link(pill, url), ""
             return pill, ""
 
     if _STATUS_COLS.match(col):
         chip = _status_chip(value)
         if chip:
+            if section_jql:
+                url = search_url(jira_base, f'({section_jql}) AND status = "{value}"')
+                return _wrap_link(chip, url), ""
             return chip, ""
 
     if _MONEY_COLS.search(col):
@@ -206,7 +226,8 @@ def _cell_for(col: str, value: Any, jira_base: str) -> tuple[str, str]:
 # Section renderers
 # ---------------------------------------------------------------------------
 
-def _table(columns: list[str], rows: list[dict[str, Any]], jira_base: str) -> str:
+def _table(columns: list[str], rows: list[dict[str, Any]], jira_base: str,
+           section_jql: str | None = None) -> str:
     head_cells = []
     for c in columns:
         align = "left"
@@ -226,7 +247,7 @@ def _table(columns: list[str], rows: list[dict[str, Any]], jira_base: str) -> st
     for r in rows:
         cells = []
         for c in columns:
-            inner, extra = _cell_for(c, r.get(c), jira_base)
+            inner, extra = _cell_for(c, r.get(c), jira_base, section_jql)
             cells.append(
                 f'<td style="padding:9px 10px;border-bottom:1px solid #F4F5F7;'
                 f'vertical-align:top;{extra}">{inner}</td>'
@@ -316,9 +337,18 @@ def _render_groups(section: dict[str, Any], jira_base: str) -> str:
                 '<ul style="margin:6px 0 0 0;padding-left:20px;color:#5E6C84;font-size:12.5px">'
                 f'{"".join(sample_lines)}</ul>'
             )
+        # Group name is clickable → Jira search filtered to this group.
+        group_url = search_url(jira_base, g["jql"]) if g.get("jql") else None
+        name_html = (
+            f'<a href="{escape(group_url)}" '
+            f'style="font-weight:600;color:#172B4D;font-size:14px;text-decoration:none;'
+            f'border-bottom:1px dotted #97A0AF">{escape(g["name"])}</a>'
+            if group_url
+            else f'<span style="font-weight:600;color:#172B4D;font-size:14px">{escape(g["name"])}</span>'
+        )
         out.append(
             '<div style="padding:10px 0;border-bottom:1px solid #F4F5F7">'
-            f'<span style="font-weight:600;color:#172B4D;font-size:14px">{escape(g["name"])}</span>'
+            f'{name_html}'
             f'<span style="color:#5E6C84;margin-left:8px;font-size:13px">— {g["count"]} open</span>'
             f'{samples_html}'
             '</div>'
@@ -366,10 +396,11 @@ def _section_card(title: str, body: str, *, note: str | None, accent: str,
 
 def render_section(section: dict[str, Any], jira_base: str, accent_fallback: str) -> str:
     kind = section["kind"]
+    jql = section.get("jql")
     if kind == "kpi":
         body = _render_kpi(section, jira_base)
     elif kind == "table":
-        body = _table(section["columns"], section["data"], jira_base)
+        body = _table(section["columns"], section["data"], jira_base, section_jql=jql)
     elif kind == "breakdown":
         body = _render_breakdown(section)
     elif kind == "groups":
@@ -378,7 +409,6 @@ def render_section(section: dict[str, Any], jira_base: str, accent_fallback: str
         body = _render_empty(section)
     else:
         body = f'<pre>{escape(str(section.get("data")))}</pre>'
-    jql = section.get("jql")
     deep_link = search_url(jira_base, jql) if jql else None
     accent = _resolve_accent(section, accent_fallback)
     return _section_card(section["title"], body, note=section.get("note"),

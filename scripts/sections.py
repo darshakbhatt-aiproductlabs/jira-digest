@@ -267,11 +267,23 @@ def handle_group_by(section: dict[str, Any], client: JiraClient, ctx: dict[str, 
         bucket_key = str(val) if val is not None else "(none)"
         buckets[bucket_key].append(issue)
 
+    # Build the resolved field ID once for per-group JQL construction.
+    group_field_id = client.resolve_field(group_field)
     groups = []
     for name, items in buckets.items():
         samples = [extract_row(i, sample_columns, client, opts["summary_max_chars"])
                    for i in items[:sample_size]]
-        groups.append({"name": name, "count": len(items), "samples": samples})
+        # Per-group JQL: same base filter PLUS a constraint on the group field.
+        # Renderers use this to make each group name clickable to a Jira search
+        # showing exactly that group's tickets.
+        if name == "(none)":
+            group_jql = f'({jql}) AND "{group_field_id}" IS EMPTY'
+        else:
+            # Escape any double-quotes inside the value
+            safe_name = str(name).replace('"', r'\"')
+            group_jql = f'({jql}) AND "{group_field_id}" = "{safe_name}"'
+        groups.append({"name": name, "count": len(items),
+                       "samples": samples, "jql": group_jql})
 
     # Sort
     reverse = (sort_cfg.get("dir") or "desc").lower() == "desc"
