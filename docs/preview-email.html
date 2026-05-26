@@ -329,56 +329,48 @@
   </div>
 </div>
 
-<!-- ╭───────────── Stuck high-value (amber) ─────────────╮ -->
+<!-- ╭───────────── Stuck items (stuck section type) ─────────────╮ -->
 <div class="card amber">
   <div class="card-head">
     <h2 class="card-title">
       <a href="#" class="demo-link" data-jql='project = PROJ AND statusCategory != Done AND "days_in_status" >= 30'>
-        <span class="emoji">⚠️</span><span>Stuck high-value commitments</span>
+        <span class="emoji">⚠️</span><span>Stuck — no status change in 30+ days</span>
         <span class="arr">view in Jira ↗</span>
       </a>
-      <span class="dot-pulse" tabindex="0" data-tooltip="Stuck-item detection. Set the per-status threshold (Reviewed > 7d, Prioritised > 14d, etc.) or one global threshold. Dwell time is computed from Jira's changelog — no false positives from random comment edits."></span>
+      <span class="dot-pulse" tabindex="0" data-tooltip="stuck section — configure threshold_days (14, 30, 90, …) and which columns to show. Dwell time is computed from Jira's changelog (not from comment edits), so it's accurate to the day."></span>
     </h2>
-    <span class="card-note">6 flagged</span>
+    <span class="card-note">4 flagged · section type: stuck</span>
   </div>
-  <p class="card-desc">
-    Engagement score ≥ 0.10 but no status change. Idle = days since last Jira update.
-    Per-status thresholds: <code>Reviewed &gt;7d</code> · <code>Prioritised &gt;14d</code> · <code>In Progress &gt;14d</code>.
-  </p>
   <table>
-    <thead><tr><th class="num">Score</th><th>Ticket</th><th>Summary</th><th>Idle</th><th class="num">Amount</th><th>Why this matters</th></tr></thead>
+    <thead><tr><th>Ticket</th><th>Summary</th><th>Status</th><th class="num">Idle</th><th>Assignee</th></tr></thead>
     <tbody>
       <tr>
-        <td class="score score-low">0.16</td>
         <td><a class="tkt demo-link" data-jql="key = PROJ-0488">PROJ-0488</a></td>
         <td>Salesforce sync edge case for accounts with custom-field overrides</td>
-        <td><span class="badge badge-red">89d</span></td>
-        <td class="money">$37k</td>
-        <td class="tight"><b>integrations roadmap</b> · paying · <b>Meridian Health</b></td>
+        <td><a class="demo-link" data-jql='project = PROJ AND status = "In Progress"' style="color:#0747A6;text-decoration:none;font-weight:600">In Progress</a></td>
+        <td class="num"><span class="badge badge-red">89d</span></td>
+        <td>Alice Chen</td>
       </tr>
       <tr>
-        <td class="score score-low">0.14</td>
         <td><a class="tkt demo-link" data-jql="key = PROJ-0844">PROJ-0844</a></td>
         <td>Webhooks dropped after retry threshold for high-volume tenants</td>
-        <td><span class="badge badge-red">54d</span></td>
-        <td class="money">$22k</td>
-        <td class="tight"><b>billing reliability</b> · <b>Atlas Manufacturing</b></td>
+        <td><a class="demo-link" data-jql='project = PROJ AND status = "To Do"' style="color:#0747A6;text-decoration:none;font-weight:600">To Do</a></td>
+        <td class="num"><span class="badge badge-red">54d</span></td>
+        <td>(unassigned)</td>
       </tr>
       <tr>
-        <td class="score score-low">0.11</td>
         <td><a class="tkt demo-link" data-jql="key = PROJ-0807">PROJ-0807</a></td>
         <td>Audit log truncation on enterprise plans during peak hours</td>
-        <td><span class="badge badge-amber">47d</span></td>
-        <td class="money">$80k</td>
-        <td class="tight"><b>compliance</b> · <b>Continental Energy</b></td>
+        <td><a class="demo-link" data-jql='project = PROJ AND status = "In Review"' style="color:#0747A6;text-decoration:none;font-weight:600">In Review</a></td>
+        <td class="num"><span class="badge badge-red">47d</span></td>
+        <td>Ben Martinez</td>
       </tr>
       <tr>
-        <td class="score score-low">0.10</td>
         <td><a class="tkt demo-link" data-jql="key = PROJ-0901">PROJ-0901</a></td>
         <td>Bulk import error messaging unclear for partial-success cases</td>
-        <td><span class="badge badge-amber">33d</span></td>
-        <td class="money"><span style="color:#6B778C">—</span></td>
-        <td class="tight">repeated reports · <b>Pacific Foods</b></td>
+        <td><a class="demo-link" data-jql='project = PROJ AND status = "Awaiting Customer"' style="color:#974F0C;text-decoration:none;font-weight:600">Awaiting Customer</a></td>
+        <td class="num"><span class="badge badge-red">33d</span></td>
+        <td>Carol Park</td>
       </tr>
     </tbody>
   </table>
